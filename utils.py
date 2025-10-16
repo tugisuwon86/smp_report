@@ -1,5 +1,6 @@
 # pdf_utils.py
 import pdfplumber
+import streamlit as st
 
 def extract_text_from_pdf(file):
     text = ""
@@ -14,7 +15,7 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
-HF_TOKEN = os.getenv("HF_TOKEN")
+HF_TOKEN = st.secrets['hugging-face']['api-token']
 
 def query_mistral(prompt):
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
