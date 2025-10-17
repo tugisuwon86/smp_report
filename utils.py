@@ -64,7 +64,7 @@ Your task is to accurately parse the text and return structured JSON output cont
    - Treat each section independently based on its header:
      - The section labeled **"VENDOR"**, **"VENDOR/BILL TO"**, or **"BILL TO"** should be parsed under `"bill_to_customer"`.
      - The section labeled **"SHIP TO"** or **"SHIPPING"** should be parsed under `"ship_to_customer"`.
-     - If you find "SMP Corporation" as company under shipping, that's wrong. You need to swap vendor and ship to.
+     - If you find "SMP Corporation" as company under shipping, that's wrong. You need to swap vendor and ship_to information including address, email, and phone.
    - Each section typically includes:
      - Name or company
      - Address lines
