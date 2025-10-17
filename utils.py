@@ -38,7 +38,7 @@ def query_openai(prompt):
     
     completion = client.chat.completions.create(
         # model="openai/gpt-oss-120b:groq",
-        model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
+        model="openai/gpt-oss-20b:groq",
         messages=[
             {
                 "role": "user",
