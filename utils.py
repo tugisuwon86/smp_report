@@ -58,32 +58,64 @@ def query_mistral(prompt):
 
 def build_prompt(text):
     return f"""
-You are an AI assistant that extracts structured information from purchase order text.
-Please return JSON with the following fields:
+You are an AI assistant that extracts structured information from a purchase order (PO) text.
+Your goal is to return all relevant information in **valid JSON format only**, no explanations or comments.
 
-bill_to_customer: {{
-  "company_name": "",
-  "address": "",
-  "email": "",
-  "phone": ""
-}},
-ship_to_customer: {{
-  "company_name": "",
-  "address": "",
-  "email": "",
-  "phone": ""
-}},
-items: [
-  {{
-    "product": "",
-    "description": "",
-    "quantity": "",
-    "rate": "",
-    "amount": ""
-  }}
-]
+### Extraction Rules:
 
-Text to analyze:
+1. **Vendor / Bill To**
+   - Look for sections labeled `Vendor`, `Bill To`, or similar headers.
+   - Extract this information under `bill_to_customer`.
+   - Include company name, address, email, and phone number if available.
+
+2. **Ship To**
+   - Look for sections labeled `Ship To` or `Shipping Address`.
+   - Extract this information under `ship_to_customer`.
+   - Include company name, address, email, and phone number if available.
+
+3. **Items / Products**
+   - Each item corresponds to a line in the PO table.
+   - Use the following mapping:
+     - **product** → value under `Item`, `Product`, or similar field.
+     - **description** → value under `Description` or `SKU` (which may contain a unique identifier or detailed info).
+     - **quantity** → numeric value (integer) representing count of items.
+     - **rate** → unit price (decimal), if available.
+     - **amount** → total price (decimal), if available.
+   - If a field (rate/amount) is missing, leave it as an empty string.
+
+4. **No Column Labels Case**
+   - If the PO has no explicit headers, infer field meanings by analyzing context (e.g., quantity usually integer, rate/amount often contain decimals or currency symbols).
+
+5. **Formatting**
+   - Return strictly in valid JSON format (no markdown, comments, or text).
+   - Structure must be:
+
+{{
+  "bill_to_customer": {{
+    "company_name": "",
+    "address": "",
+    "email": "",
+    "phone": ""
+  }},
+  "ship_to_customer": {{
+    "company_name": "",
+    "address": "",
+    "email": "",
+    "phone": ""
+  }},
+  "items": [
+    {{
+      "product": "",
+      "description": "",
+      "quantity": "",
+      "rate": "",
+      "amount": ""
+    }}
+  ]
+}}
+
+### Text to Analyze:
 {text}
-Return ONLY valid JSON, nothing else.
+
+Return ONLY valid JSON — do not include any extra commentary or explanations.
 """
