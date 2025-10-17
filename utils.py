@@ -26,47 +26,26 @@ def query_openai(prompt):
         api_key=HF_TOKEN,
     )
 
-    completion = client.chat.completions.create(
-        model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
-        messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-    )
-    
-    print(completion.choices[0].message)
-    
     # completion = client.chat.completions.create(
-    #     model="openai/gpt-oss-120b:groq",
+    #     model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
     #     messages=[
-    #         {
-    #             "role": "user",
-    #             "content": prompt
-    #         }
-    #     ],
+    #             {
+    #                 "role": "user",
+    #                 "content": prompt
+    #             }
+    #         ],
     # )
-    # return completion.choices[0].message
-
-
-def query_mistral(prompt):
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    model = "mistralai/Mistral-7B-Instruct-v0.2"
-    url = f"https://api-inference.huggingface.co/models/{model}"
-
-    payload = {
-        "inputs": prompt,
-        "parameters": {"max_new_tokens": 400, "temperature": 0.2}
-    }
-
-    response = requests.post(url, headers=headers, json=payload)
-    response.raise_for_status()
-    data = response.json()
-
-    if isinstance(data, list):
-        return data[0]["generated_text"]
-    return data
+    
+    completion = client.chat.completions.create(
+        model="openai/gpt-oss-120b:groq",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+    )
+    return completion.choices[0].message
 
 def build_prompt(text):
     return f"""
