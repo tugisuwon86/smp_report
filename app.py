@@ -37,6 +37,7 @@ if uploaded_files:
             text = extract_text_from_pdf(uploaded_file)
             prompt = build_prompt(text)
             response = query_openai(prompt)
+            st.write(response.keys())
             st.write(response)
             # try:
             #     vendor, ship_to, df = parser(response)
