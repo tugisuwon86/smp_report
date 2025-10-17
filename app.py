@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 import json
-from utils import extract_text_from_pdf, query_mistral, build_prompt
+from utils import extract_text_from_pdf, query_mistral, build_prompt, query_openai
 
 st.set_page_config(page_title="Purchase Order Extractor", layout="wide")
 st.title("📄 Purchase Order Extractor")
@@ -13,7 +13,7 @@ if uploaded_files:
         with st.spinner(f"Extracting data from {uploaded_file.name}..."):
             text = extract_text_from_pdf(uploaded_file)
             prompt = build_prompt(text)
-            response = query_mistral(prompt)
+            response = query_openai(prompt)
 
             try:
                 parsed = json.loads(response)
