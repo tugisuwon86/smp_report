@@ -61,7 +61,13 @@ def build_prompt(text):
 You are an AI assistant that extracts structured information from purchase order text.
 Please return JSON with the following fields:
 
-customer: {{
+bill_to_customer: {{
+  "company_name": "",
+  "address": "",
+  "email": "",
+  "phone": ""
+}},
+ship_to_customer: {{
   "company_name": "",
   "address": "",
   "email": "",
