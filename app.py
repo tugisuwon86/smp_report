@@ -37,17 +37,18 @@ if uploaded_files:
             text = extract_text_from_pdf(uploaded_file)
             prompt = build_prompt(text)
             response = query_openai(prompt)
-            try:
-                vendor, ship_to, df = parser(response)
-                st.subheader(f"📦 {uploaded_file.name}")
-                st.write('Vendor Information')
-                st.write(vendor)
+            st.write(response)
+            # try:
+            #     vendor, ship_to, df = parser(response)
+            #     st.subheader(f"📦 {uploaded_file.name}")
+            #     st.write('Vendor Information')
+            #     st.write(vendor)
 
-                st.write('Shipping Information')
-                st.write(ship_to)
+            #     st.write('Shipping Information')
+            #     st.write(ship_to)
 
-                st.write('Item Information')
-                st.dataframe(df)
-            except json.JSONDecodeError:
-                st.error("Could not parse structured JSON. Here’s the raw response:")
-                st.text(response)
+            #     st.write('Item Information')
+            #     st.dataframe(df)
+            # except json.JSONDecodeError:
+            #     st.error("Could not parse structured JSON. Here’s the raw response:")
+            #     st.text(response)
