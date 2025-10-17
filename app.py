@@ -41,7 +41,7 @@ if uploaded_files:
             prompt = build_prompt(text)
             response = query_openai(prompt)
             # st.write(type(response))
-            # st.write(response)
+            st.write(response)
             try:
                 vendor, ship_to, df = parser(response.content)
                 st.subheader(f"📦 {uploaded_file.name}")
