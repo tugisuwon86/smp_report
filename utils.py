@@ -58,39 +58,50 @@ def query_mistral(prompt):
 
 def build_prompt(text):
     return f"""
-You are an AI assistant that extracts structured information from a purchase order (PO) text.
-Your goal is to return all relevant information in **valid JSON format only**, no explanations or comments.
+You are an AI assistant that extracts structured data from purchase order (PO) documents.
 
-### Extraction Rules:
+Your task is to accurately parse the text and return structured JSON output containing vendor and shipping information, along with detailed item lines.
 
-1. **Vendor / Bill To**
-   - Look for sections labeled `Vendor`, `Bill To`, or similar headers. 
-   - It is a column so the actual information is written below the section header
-   - Extract this information under `bill_to_customer`.
-   - Include company name, address, email, and phone number if available.
+---
 
-2. **Ship To**
-   - Look for sections labeled `Ship To` or `Shipping Address`.
-   - It is a column so the actual information is written below the section header
-   - Extract this information under `ship_to_customer`.
-   - Include company name, address, email, and phone number if available.
+### 📦 Extraction Rules
 
-3. **Items / Products**
-   - Each item corresponds to a line in the PO table.
-   - Use cell breaker if possible meaning do not concatenate strings if it is from different cell/column.
-   - Use the following mapping:
-     - **product** → value under `Item`, `Product`, or similar field.
-     - **description** → value under `Description` or `SKU` (which may contain a unique identifier or detailed info).
-     - **quantity** → numeric value (integer) representing count of items.
-     - **amount** → total price (decimal), if available.
-   - If a field (rate/amount) is missing, leave it as an empty string.
+1. **Section Identification**
+   - The PO text may contain multiple columns (e.g., "VENDOR" on the left and "SHIP TO" on the right).
+   - Treat each section independently based on its header:
+     - The section labeled **"VENDOR"**, **"VENDOR/BILL TO"**, or **"BILL TO"** should be parsed under `"bill_to_customer"`.
+     - The section labeled **"SHIP TO"** or **"SHIPPING"** should be parsed under `"ship_to_customer"`.
+   - Each section typically includes:
+     - Name or company
+     - Address lines
+     - City, State, ZIP
+     - Optional email or phone number
 
-4. **No Column Labels Case**
-   - If the PO has no explicit headers, infer field meanings by analyzing context (e.g., quantity usually integer, rate/amount often contain decimals or currency symbols).
+   ⚠️ Do NOT merge information across columns or sections — extract content directly under the respective header.
 
-5. **Formatting**
-   - Return strictly in valid JSON format (no markdown, comments, or text).
-   - Structure must be:
+2. **Item Table Extraction**
+   - Items appear in a table format (rows and columns).
+   - Each row represents one product/item.
+   - Never merge or concatenate information from multiple rows or across columns.
+   - Map fields as follows:
+     - **product** → value under "Item" or "Product" column.
+     - **description** → value under "Description" or "SKU" column (contains product details or identifiers).
+     - **quantity** → integer quantity value (look for whole numbers).
+     - **amount** → total price, often decimal or currency (may be missing).
+   - If a column is missing, leave the field as an empty string.
+
+3. **No Column Labels Case**
+   - If the table has no headers, infer the meaning by position and content pattern:
+     - Quantities are integers.
+     - Rate and Amount are usually decimals or currency values.
+
+4. **Output Requirements**
+   - Return **only valid JSON**, with the structure below.
+   - Do not include explanations, text, or markdown formatting.
+
+---
+
+### ✅ JSON Output Format
 
 {{
   "bill_to_customer": {{
@@ -115,8 +126,10 @@ Your goal is to return all relevant information in **valid JSON format only**, n
   ]
 }}
 
-### Text to Analyze:
+---
+
+### 🔍 Text to Analyze
 {text}
 
-Return ONLY valid JSON — do not include any extra commentary or explanations.
+Return ONLY valid JSON output.
 """
