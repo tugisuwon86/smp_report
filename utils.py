@@ -27,18 +27,13 @@ def query_openai(prompt):
     )
 
     completion = client.chat.completions.create(
-        model="meta-llama/Llama-4-Scout-17B-16E-Instruct:groq",
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
+    model="meta-llama/Llama-3.3-70B-Instruct:groq",
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
     )
     
     print(completion.choices[0].message)
