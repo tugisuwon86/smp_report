@@ -12,10 +12,31 @@ def extract_text_from_pdf(file):
 # llm_utils.py
 import os
 import requests
+import openai
 from dotenv import load_dotenv
 
 load_dotenv()
 HF_TOKEN = st.secrets['hugging-face']['api_token']
+
+from openai import OpenAI
+
+def query_openai(prompt):
+    client = OpenAI(
+        base_url="https://router.huggingface.co/v1",
+        api_key=os.environ["HF_TOKEN"],
+    )
+    
+    completion = client.chat.completions.create(
+        model="openai/gpt-oss-120b:groq",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+    )
+    return completion.choices[0].message
+
 
 def query_mistral(prompt):
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
