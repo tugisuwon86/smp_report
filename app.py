@@ -8,6 +8,16 @@ st.title("📄 Purchase Order Extractor")
 
 uploaded_files = st.file_uploader("Upload one or more PDF purchase orders", type=["pdf"], accept_multiple_files=True)
 
+def parser(response):
+    content = response['content']
+
+    output = {}
+    ## customer level
+    output['company'] = content['customer']['company_name']
+    output['address'] = content['customer']['address']
+    output['email'] = content['customer']['email']
+    output['phone'] = content['customer']['phone']
+
 if uploaded_files:
     for uploaded_file in uploaded_files:
         with st.spinner(f"Extracting data from {uploaded_file.name}..."):
