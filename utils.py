@@ -64,22 +64,24 @@ Your goal is to return all relevant information in **valid JSON format only**, n
 ### Extraction Rules:
 
 1. **Vendor / Bill To**
-   - Look for sections labeled `Vendor`, `Bill To`, or similar headers.
+   - Look for sections labeled `Vendor`, `Bill To`, or similar headers. 
+   - It is a column so the actual information is written below the section header
    - Extract this information under `bill_to_customer`.
    - Include company name, address, email, and phone number if available.
 
 2. **Ship To**
    - Look for sections labeled `Ship To` or `Shipping Address`.
+   - It is a column so the actual information is written below the section header
    - Extract this information under `ship_to_customer`.
    - Include company name, address, email, and phone number if available.
 
 3. **Items / Products**
    - Each item corresponds to a line in the PO table.
+   - Use cell breaker if possible meaning do not concatenate strings if it is from different cell/column.
    - Use the following mapping:
      - **product** → value under `Item`, `Product`, or similar field.
      - **description** → value under `Description` or `SKU` (which may contain a unique identifier or detailed info).
      - **quantity** → numeric value (integer) representing count of items.
-     - **rate** → unit price (decimal), if available.
      - **amount** → total price (decimal), if available.
    - If a field (rate/amount) is missing, leave it as an empty string.
 
@@ -108,7 +110,6 @@ Your goal is to return all relevant information in **valid JSON format only**, n
       "product": "",
       "description": "",
       "quantity": "",
-      "rate": "",
       "amount": ""
     }}
   ]
