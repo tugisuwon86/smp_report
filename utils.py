@@ -60,6 +60,7 @@ Your task is to accurately parse the text and return structured JSON output cont
 
 1. **Section Identification**
    - The PO text may contain multiple columns (e.g., "VENDOR" on the left and "SHIP TO" on the right).
+   - Please ignore the top section. Look for the header related to **"VENDOR"** or **"BILL TO"** or **"SHIP TO"** first.
    - Treat each section independently based on its header:
      - The section labeled **"VENDOR"**, **"VENDOR/BILL TO"**, or **"BILL TO"** should be parsed under `"bill_to_customer"`.
      - The section labeled **"SHIP TO"** or **"SHIPPING"** should be parsed under `"ship_to_customer"`.
@@ -77,7 +78,7 @@ Your task is to accurately parse the text and return structured JSON output cont
    - Never merge or concatenate information from multiple rows or across columns.
    - Map fields as follows:
      - **product** → value under "Item" or "Product" column.
-     - **description** → value under "Description" or "SKU" column (contains product details or identifiers).
+     - **description** → value under "Description" or "SKU" column (contains product details or identifiers). It should not contain space. It is unique identify that may have hyphen. If the string is broken by colon, only print the last element with colon delimiter.
      - **quantity** → integer quantity value (look for whole numbers).
      - **amount** → total price, often decimal or currency (may be missing).
    - If a column is missing, leave the field as an empty string.
