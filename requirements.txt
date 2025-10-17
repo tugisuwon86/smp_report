@@ -11,4 +11,4 @@ python-dotenv>=1.0.1
 
 # JSON utilities
 jsonschema>=4.23.0
-openai>=
+openai>=1.2.3
