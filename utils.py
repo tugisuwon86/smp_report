@@ -23,7 +23,7 @@ from openai import OpenAI
 def query_openai(prompt):
     client = OpenAI(
         base_url="https://router.huggingface.co/v1",
-        api_key=os.environ["HF_TOKEN"],
+        api_key=HF_TOKEN,
     )
     
     completion = client.chat.completions.create(
