@@ -77,9 +77,6 @@ if option == 'Images':
                             key='download_csv',
                             type='secondary'
                          )
-                    else:
-                         st.warning("Could not convert output to a traditional DataFrame format. Displaying raw Markdown.")
-                         st.markdown(markdown_output)
 
                 except Exception as e:
                     st.error(f"An error occurred during processing: {e}")
