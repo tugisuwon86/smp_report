@@ -43,29 +43,26 @@ if option == 'Images':
         st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
     
         if st.button("Extract Data with Gemini", type="primary"):
-            if not API_KEY:
-                st.error("Please provide a valid Gemini API Key to proceed.")
-            else:
-                with st.spinner("Analyzing image and structuring data..."):
-                    try:
-                        # Read the file data
-                        base64_image, mime_type = read_file_to_base64(uploaded_file)
-                        
-                        # Call the Gemini API
-                        extracted_data = call_gemini_api(API_KEY, base64_image, mime_type)
-                        
-                        st.success("Extraction Complete!")
-                        st.subheader("Extracted Structured Data (Markdown)")
-                        
-                        # Display the raw Markdown response
-                        st.code(extracted_data, language="markdown")
-                        
-                        # Display the rendered Markdown table for a cleaner view
-                        st.subheader("Rendered Table Preview")
-                        st.markdown(extracted_data)
-    
-                    except Exception as e:
-                        st.error(f"An error occurred during processing: {e}")
+            with st.spinner("Analyzing image and structuring data..."):
+                try:
+                    # Read the file data
+                    base64_image, mime_type = read_file_to_base64(uploaded_file)
+                    
+                    # Call the Gemini API
+                    extracted_data = call_gemini_api(API_KEY, base64_image, mime_type)
+                    
+                    st.success("Extraction Complete!")
+                    st.subheader("Extracted Structured Data (Markdown)")
+                    
+                    # Display the raw Markdown response
+                    st.code(extracted_data, language="markdown")
+                    
+                    # Display the rendered Markdown table for a cleaner view
+                    st.subheader("Rendered Table Preview")
+                    st.markdown(extracted_data)
+
+                except Exception as e:
+                    st.error(f"An error occurred during processing: {e}")
 elif option == 'PDF':
     uploaded_files = st.file_uploader("Upload one or more PDF purchase orders", type=["pdf"], accept_multiple_files=True)
     if uploaded_files:
