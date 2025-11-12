@@ -2,7 +2,7 @@
 import streamlit as st
 import json
 import pandas as pd
-from utils import extract_text_from_pdf, build_prompt, query_openai, 
+from utils import extract_text_from_pdf, build_prompt, query_openai, read_file_to_base64, call_gemini_api
 
 st.set_page_config(page_title="Purchase Order Extractor", layout="wide")
 st.title("📄 Purchase Order Extractor")
