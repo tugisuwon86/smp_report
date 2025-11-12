@@ -10,7 +10,7 @@ option = st.selectbox(
     "Select File Types",
     ("PDF", "Images"),
 )
-API_KEY = st.secrets['gemini-api']['api_token']
+
 def parser(content):
 
     content = json.loads(content)
@@ -49,7 +49,7 @@ if option == 'Images':
                     base64_image, mime_type = read_file_to_base64(uploaded_file)
                     
                     # Call the Gemini API
-                    extracted_data = call_gemini_api(API_KEY, base64_image, mime_type)
+                    extracted_data = call_gemini_api(base64_image, mime_type)
                     
                     st.success("Extraction Complete!")
                     st.subheader("Extracted Structured Data (Markdown)")
