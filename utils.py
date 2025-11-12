@@ -103,37 +103,48 @@ def call_gemini_api(base64_data: str, mime_type: str) -> str:
 def convert_markdown_to_dataframe(markdown_table: str) -> pd.DataFrame:
     """
     Converts a Markdown table string (separated by '|') to a Pandas DataFrame.
-    Handles cleanup for leading/trailing pipes and separator lines.
+    Handles cleanup for leading/trailing pipes and separator lines by robustly filtering for
+    lines that contain pipes but are not the separator line.
     """
     # Split the string into lines
     lines = markdown_table.strip().split('\n')
 
-    # Check for minimal table structure
-    if len(lines) < 2 or '---' not in markdown_table:
-        # If the LLM returns non-tabular data, wrap it in a single-column DataFrame
+    # Filter for lines that are likely part of the table (contain '|')
+    # and exclude the separator line (which contains '---')
+    table_lines = [
+        line.strip() for line in lines 
+        if '|' in line and '---' not in line
+    ]
+    
+    # If not enough lines for a table, handle non-tabular output
+    if len(table_lines) < 1:
         if not markdown_table.strip():
             return pd.DataFrame()
+        # Fallback for non-tabular text output
         return pd.DataFrame({"Result": [markdown_table.strip()]})
 
-    # 1. Filter out the separator line (which contains '---')
-    lines_without_separator = [line for line in lines if '---' not in line]
-
-    # 2. Join the remaining lines and wrap them in StringIO
-    clean_markdown = "\n".join(lines_without_separator)
+    # Join the filtered, cleaned lines
+    clean_markdown = "\n".join(table_lines)
     
-    # 3. Read the cleaned data using '|' as a separator
+    # Read the cleaned data using '|' as a separator
     # skipinitialspace=True cleans up spaces around the pipes
-    df = pd.read_csv(StringIO(clean_markdown), sep='|', skipinitialspace=True)
+    try:
+        df = pd.read_csv(StringIO(clean_markdown), sep='|', skipinitialspace=True)
+    except pd.errors.ParserError:
+        # If parsing fails even with clean lines, return non-tabular fallback
+        return pd.DataFrame({"Result": [markdown_table.strip()]})
     
     # 4. Clean up the DataFrame
-    # Drop columns that are entirely empty (these result from leading/trailing pipes)
+    # Drop columns that are entirely empty (due to leading/trailing pipes)
     df = df.dropna(axis=1, how='all')
     
     # Reset column names (strip whitespace from column headers)
     df.columns = df.columns.str.strip()
     
-    return df
+    # Final check: remove any leading/trailing whitespace from all cell values
+    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
     
+    return df    
 ### PDF files
 from openai import OpenAI
 
