@@ -2,7 +2,8 @@
 import streamlit as st
 import json
 import pandas as pd
-from utils import extract_text_from_pdf, build_prompt, query_openai, read_file_to_base64, call_gemini_api
+from utils import extract_text_from_pdf, build_prompt, query_openai, read_file_to_base64, call_gemini_api, convert_markdown_to_dataframe
+from io import StringIO 
 
 st.set_page_config(page_title="Purchase Order Extractor", layout="wide")
 st.title("📄 Purchase Order Extractor")
@@ -50,6 +51,7 @@ if option == 'Images':
                     
                     # Call the Gemini API
                     extracted_data = call_gemini_api(base64_image, mime_type)
+                    df_extracted = convert_markdown_to_dataframe(extracted_data)
                     
                     st.success("Extraction Complete!")
                     st.subheader("Extracted Structured Data (Markdown)")
@@ -60,6 +62,24 @@ if option == 'Images':
                     # Display the rendered Markdown table for a cleaner view
                     st.subheader("Rendered Table Preview")
                     st.markdown(extracted_data)
+    
+                    # Check if the DataFrame conversion was successful and it's a valid table
+                    if not df_extracted.empty and 'Result' not in df_extracted.columns:
+                         st.dataframe(df_extracted)
+                         
+                         # Optional: Add download button for CSV
+                         csv = df_extracted.to_csv(index=False).encode('utf-8')
+                         st.download_button(
+                            label="Download Data as CSV",
+                            data=csv,
+                            file_name='extracted_data.csv',
+                            mime='text/csv',
+                            key='download_csv',
+                            type='secondary'
+                         )
+                    else:
+                         st.warning("Could not convert output to a traditional DataFrame format. Displaying raw Markdown.")
+                         st.markdown(markdown_output)
 
                 except Exception as e:
                     st.error(f"An error occurred during processing: {e}")
