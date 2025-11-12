@@ -10,7 +10,7 @@ option = st.selectbox(
     "Select File Types",
     ("PDF", "Images"),
 )
-
+API_KEY = st.secrets['gemini-api']['api_token']
 def parser(content):
 
     content = json.loads(content)
