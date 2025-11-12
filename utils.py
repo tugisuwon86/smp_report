@@ -1,6 +1,7 @@
 # pdf_utils.py
 import pdfplumber
 import streamlit as st
+from io import StringIO 
 
 def extract_text_from_pdf(file):
     text = ""
