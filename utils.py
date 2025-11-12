@@ -17,7 +17,84 @@ from dotenv import load_dotenv
 
 load_dotenv()
 HF_TOKEN = st.secrets['hugging-face']['api_token']
+GEMINI_TOKEN = st.secrets['gemini-api']['api_token']
 
+### image files
+MODEL_NAME = "gemini-2.5-flash-preview-09-2025"
+API_URL_TEMPLATE = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key="
+
+# --- Extraction Prompts (Same as your original script) ---
+
+SYSTEM_PROMPT = (
+    "You are an expert data extraction and analysis bot. Your task is to analyze the provided image "
+    "(which contains structured data, likely a table or list). You must extract all text and structure "
+    "the data into a clean, comprehensive Markdown table format, using appropriate headings and columns based on "
+    "the content. Do not include any introductory or concluding sentences, only the Markdown table."
+)
+
+USER_QUERY = (
+    "Analyze the content of this image. Recreate the table structure and its data completely and "
+    "accurately in a Markdown table format. Ensure every piece of information is captured."
+)
+
+# --- Core Utility Functions ---
+
+def read_file_to_base64(uploaded_file):
+    """Reads Streamlit's UploadedFile object and returns its Base64 encoded string and MIME type."""
+    # Use uploaded_file.getvalue() to get the bytes
+    encoded_string = base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
+    mime_type = uploaded_file.type
+    return encoded_string, mime_type
+
+def call_gemini_api(base64_data: str, mime_type: str) -> str:
+    """Calls the Gemini API with exponential backoff for image analysis."""
+    headers = {'Content-Type': 'application/json'}
+    api_url = API_URL_TEMPLATE + GEMINI_TOKEN
+
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {"text": USER_QUERY},
+                    {
+                        "inlineData": {
+                            "mimeType": mime_type,
+                            "data": base64_data
+                        }
+                    }
+                ]
+            }
+        ],
+        "systemInstruction": {
+            "parts": [{"text": SYSTEM_PROMPT}]
+        }
+    }
+
+    max_attempts = 1
+    for attempt in range(max_attempts):
+        try:
+            response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+            response.raise_for_status()
+            
+            # Successful response
+            result = response.json()
+            candidate = result.get('candidates', [{}])[0]
+            extracted_text = candidate.get('content', {}).get('parts', [{}])[0].get('text', 'No text extracted.')
+            
+            return extracted_text
+
+        except requests.exceptions.RequestException as e:
+            if attempt < max_attempts - 1 and (response.status_code == 429 or response.status_code >= 500):
+                delay = (2 ** attempt) + (random.random() * 1) # Exponential backoff + jitter
+                time.sleep(delay)
+            else:
+                st.error(f"Critical API Error: {e}")
+                return "Extraction failed due to a critical API error."
+        
+    return "Extraction failed after multiple retries."
+
+### PDF files
 from openai import OpenAI
 
 def query_openai(prompt):
