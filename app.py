@@ -38,6 +38,7 @@ if uploaded_files:
     for uploaded_file in uploaded_files:
         with st.spinner(f"Extracting data from {uploaded_file.name}..."):
             text = extract_text_from_pdf(uploaded_file)
+            st.write(text)
             prompt = build_prompt(text)
             response = query_openai(prompt)
             # st.write(type(response))
