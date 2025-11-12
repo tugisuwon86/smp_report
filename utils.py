@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 import json
 import base64
 import time
+import pandas as pd
 from io import BytesIO
 
 load_dotenv()
@@ -98,6 +99,40 @@ def call_gemini_api(base64_data: str, mime_type: str) -> str:
         
     return "Extraction failed after multiple retries."
 
+def convert_markdown_to_dataframe(markdown_table: str) -> pd.DataFrame:
+    """
+    Converts a Markdown table string (separated by '|') to a Pandas DataFrame.
+    Handles cleanup for leading/trailing pipes and separator lines.
+    """
+    # Split the string into lines
+    lines = markdown_table.strip().split('\n')
+
+    # Check for minimal table structure
+    if len(lines) < 2 or '---' not in markdown_table:
+        # If the LLM returns non-tabular data, wrap it in a single-column DataFrame
+        if not markdown_table.strip():
+            return pd.DataFrame()
+        return pd.DataFrame({"Result": [markdown_table.strip()]})
+
+    # 1. Filter out the separator line (which contains '---')
+    lines_without_separator = [line for line in lines if '---' not in line]
+
+    # 2. Join the remaining lines and wrap them in StringIO
+    clean_markdown = "\n".join(lines_without_separator)
+    
+    # 3. Read the cleaned data using '|' as a separator
+    # skipinitialspace=True cleans up spaces around the pipes
+    df = pd.read_csv(StringIO(clean_markdown), sep='|', skipinitialspace=True)
+    
+    # 4. Clean up the DataFrame
+    # Drop columns that are entirely empty (these result from leading/trailing pipes)
+    df = df.dropna(axis=1, how='all')
+    
+    # Reset column names (strip whitespace from column headers)
+    df.columns = df.columns.str.strip()
+    
+    return df
+    
 ### PDF files
 from openai import OpenAI
 
