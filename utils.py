@@ -14,6 +14,10 @@ import os
 import requests
 import openai
 from dotenv import load_dotenv
+import json
+import base64
+import time
+from io import BytesIO
 
 load_dotenv()
 HF_TOKEN = st.secrets['hugging-face']['api_token']
