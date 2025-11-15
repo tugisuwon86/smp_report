@@ -158,78 +158,78 @@ def consolidate_group(df):
 # ----------------------------
 # Streamlit UI
 # ----------------------------
-def app():
-    st.title("Film Roll Width Consolidation (Simplified Version)")
 
-    uploaded = st.file_uploader("Upload Excel / Image / PDF")
+st.title("Film Roll Width Consolidation (Simplified Version)")
 
-    if uploaded:
-        suffix = uploaded.name.lower()
+uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
-        # STEP 1: extract data from the input file
-        if suffix.endswith(("xlsx", "xls")):
-            df = pd.read_excel(uploaded)
-            raw_data = df.to_csv(index=False)
+if uploaded:
+    suffix = uploaded.name.lower()
+
+    # STEP 1: extract data from the input file
+    if suffix.endswith(("xlsx", "xls")):
+        df = pd.read_excel(uploaded)
+        raw_data = df.to_csv(index=False)
+    else:
+        # Image or PDF → use Gemini Vision
+        from PIL import Image
+        import fitz
+        if suffix.endswith(("png", "jpg", "jpeg")):
+            img = Image.open(uploaded)
+            raw_data = st.session_state["vision"].generate_content(img).text
+        elif suffix.endswith("pdf"):
+            pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
+            text = ""
+            for p in pdf:
+                text += p.get_text()
+            raw_data = text
         else:
-            # Image or PDF → use Gemini Vision
-            from PIL import Image
-            import fitz
-            if suffix.endswith(("png", "jpg", "jpeg")):
-                img = Image.open(uploaded)
-                raw_data = st.session_state["vision"].generate_content(img).text
-            elif suffix.endswith("pdf"):
-                pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
-                text = ""
-                for p in pdf:
-                    text += p.get_text()
-                raw_data = text
-            else:
-                st.error("Unsupported file")
-                return
+            st.error("Unsupported file")
+            return
 
-        # STEP 2: Normalize table using LLM
-        llm = st.session_state["llm"]
-        prompt = LLM_PROMPT.format(data=raw_data)
-        out = llm.generate_text(prompt)
-        json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
-        rows = json.loads(json_text)
+    # STEP 2: Normalize table using LLM
+    llm = st.session_state["llm"]
+    prompt = LLM_PROMPT.format(data=raw_data)
+    out = llm.generate_text(prompt)
+    json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
+    rows = json.loads(json_text)
 
-        df_norm = pd.DataFrame(rows)
+    df_norm = pd.DataFrame(rows)
 
-        # STEP 3: parse size fields properly
-        widths = []
-        lengths = []
-        parts = []
+    # STEP 3: parse size fields properly
+    widths = []
+    lengths = []
+    parts = []
 
-        for t in df_norm["original_size_text"]:
-            w, l, p = parse_size(t)
-            widths.append(w)
-            lengths.append(l)
-            parts.append(p)
+    for t in df_norm["original_size_text"]:
+        w, l, p = parse_size(t)
+        widths.append(w)
+        lengths.append(l)
+        parts.append(p)
 
-        df_norm["width"] = widths
-        df_norm["length"] = lengths
-        df_norm["parts"] = parts
+    df_norm["width"] = widths
+    df_norm["length"] = lengths
+    df_norm["parts"] = parts
 
-        # STEP 4: consolidate width sum to 60
-        final_rows = []
+    # STEP 4: consolidate width sum to 60
+    final_rows = []
 
-        for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
-            out = consolidate_group(group)
-            for r in out:
-                final_rows.append({
-                    "item": item,
-                    "vlt": vlt,
-                    "composition": r["composition"],
-                    "width": r["width"],
-                    "length": r["length"],
-                    "qty": r["qty"]
-                })
+    for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
+        out = consolidate_group(group)
+        for r in out:
+            final_rows.append({
+                "item": item,
+                "vlt": vlt,
+                "composition": r["composition"],
+                "width": r["width"],
+                "length": r["length"],
+                "qty": r["qty"]
+            })
 
-        df_final = pd.DataFrame(final_rows)
+    df_final = pd.DataFrame(final_rows)
 
-        st.success("Final Consolidated Table")
-        st.dataframe(df_final)
+    st.success("Final Consolidated Table")
+    st.dataframe(df_final)
 
-        st.download_button("Download CSV", df_final.to_csv(index=False), "output.csv")
+    st.download_button("Download CSV", df_final.to_csv(index=False), "output.csv")
 
