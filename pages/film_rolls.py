@@ -185,7 +185,6 @@ if uploaded:
             raw_data = text
         else:
             st.error("Unsupported file")
-            return
 
     # STEP 2: Normalize table using LLM
     llm = st.session_state["llm"]
