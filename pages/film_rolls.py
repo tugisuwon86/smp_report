@@ -44,7 +44,7 @@ Table text begins below:
 # ================================================
 @st.cache_data
 def load_meta():
-    df = pd.read_csv("meta.txt", sep="|")
+    df = pd.read_csv("pages/meta.txt", sep="|")
     df.columns = ["type_code", "techpia_code", "description", "unit_price"]
     # Extract VLT value from Techpia code like “MEGAMAX 20”
     df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
