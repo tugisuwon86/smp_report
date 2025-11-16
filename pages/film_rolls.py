@@ -5,7 +5,7 @@ from io import BytesIO
 from collections import Counter
 import itertools
 import json
-from google import genai
+import google.generativeai as genai
 
 # ----------------------------
 # Gemini Prompt
