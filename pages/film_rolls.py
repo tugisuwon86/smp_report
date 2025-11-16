@@ -252,7 +252,7 @@ if uploaded:
                 "item": item,
                 "vlt": vlt,
                 "composition": r["composition"],
-                "width": r["width"],
+                "width": r["width_final"],
                 "length": r["length"],
                 "qty": r["qty"]
             })
