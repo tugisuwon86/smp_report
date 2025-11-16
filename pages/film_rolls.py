@@ -162,7 +162,7 @@ def consolidate_group(df):
 st.title("Film Roll Width Consolidation (Simplified Version)")
 
 if "vision" not in st.session_state:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    genai.configure(api_key=st.secrets['gemini-api']['api_token'])
     st.session_state["vision"] = genai.GenerativeModel("gemini-1.5-flash")
     
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
