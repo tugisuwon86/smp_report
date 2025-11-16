@@ -161,11 +161,7 @@ def consolidate_group(df):
 # ----------------------------
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
-
-if "vision" not in st.session_state:
-    client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])
-    st.session_state["vision"] = client
-    
+client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
 if uploaded:
@@ -181,7 +177,7 @@ if uploaded:
         import fitz
         if suffix.endswith(("png", "jpg", "jpeg")):
             img = Image.open(uploaded)
-            result = st.session_state["vision"].models.generate_content(
+            result = client.models.generate_content(
                 model="gemini-1.5-flash",
                 contents=[img]
             )
