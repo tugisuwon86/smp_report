@@ -11,147 +11,168 @@ st.write(genai.__file__)
 # Gemini Prompt
 # ----------------------------
 LLM_PROMPT = """
-You are an expert data extraction agent specializing in window tint film inventory.
+You are an expert in extracting structured film inventory tables.
 
-Normalize the table to JSON rows with the following fields:
-- item
-- vlt
-- width (numeric, inches)
-- length (numeric, feet)
-- qty (integer)
-- original_size_text
+Given extracted vendor table text, return a JSON array with rows containing:
+- item: the product name or film type
+- vlt: VLT percentage (extract if available, else "")
+- width: width in inches (integer)
+- length: length in feet (integer)
+- qty: quantity of rolls (integer)
+- original_size_text: original size description
 
-Ensure no invented values. Return ONLY a JSON array.
-Data:
+Normalize any size formats such as:
+- 40x100
+- 20x100
+- 36/24 inside parentheses
+- 60 (36/24)
+- 12, 20, 24, 36, 40 alone
+- X"XY' formats  
+Extract numeric values reliably.
+
+Return ONLY a JSON array.
+Table text begins below:
+
+----
 {data}
+----
 """
 
 # ----------------------------
 # Width extraction
 # ----------------------------
 def parse_size(text):
-    if text is None:
+    if not text:
         return None, None, None
 
     t = str(text)
 
-    # Formats like 60 (36/24)
-    m = re.search(r'(?P<w>\d{2,3})\s*\((?P<parts>[\d\s\/,]+)\)', t)
+    # "60 (36/24)" or "60 (24/12/12/12)"
+    m = re.search(r'(?P<w>\d+)\s*\((?P<parts>[\d/\s,]+)\)', t)
     if m:
         width = int(m.group("w"))
-        parts = [int(x) for x in re.split(r'[,/]', m.group("parts")) if x.strip().isdigit()]
+        parts = [int(x) for x in re.split(r"[,/]", m.group("parts")) if x.strip().isdigit()]
         return width, None, parts
 
-    # Formats like 40x100
+    # "40x100"
     m = re.search(r'(?P<w>\d+)\s*[xX]\s*(?P<l>\d+)', t)
     if m:
         return int(m.group("w")), int(m.group("l")), None
 
-    # Single width like 12, 20, 36, 40
-    m = re.search(r'(?P<w>\d{1,3})', t)
+    # single width like 12, 20, 24 etc.
+    m = re.search(r'(?P<w>\d+)', t)
     if m:
         return int(m.group("w")), None, None
 
     return None, None, None
 
 
-# ----------------------------
-# Width consolidation
-# ----------------------------
-def consolidate_group(df):
+# ================================================
+# PRIORITY MERGE LOGIC (YOUR RULES)
+# ================================================
+PRIORITY_COMBOS = [
+    [40, 20],
+    [36, 24],
+    [24, 12, 12, 12],
+    [20, 20, 20],
+    [12, 12, 12, 12, 12, 12],
+]
+
+def consolidate_with_priority(available: Counter):
     """
-    Input: df rows for same item + vlt
-    Output: list of dicts with composition, width_final, length, qty
+    available = Counter({width: qty})
+
+    Returns list of:
+        {composition, width_final, qty}
     """
+    result = []
 
-    available = Counter()
-    existing_60 = 0
-    lengths = []
+    # 1. Run priority combos first
+    for combo in PRIORITY_COMBOS:
+        need = Counter(combo)
+        max_create = min(available[w] // need[w] for w in need if need[w] > 0)
 
-    # Build counts
-    for _, r in df.iterrows():
-        qty = int(r["qty"])
-        length = r["length"]
-        if length:
-            lengths.append(length)
+        if max_create > 0:
+            result.append({
+                "composition": "/".join(str(x) for x in combo),
+                "width_final": 60,
+                "qty": max_create,
+            })
+            for w in need:
+                available[w] -= need[w] * max_create
 
-        width = r["width"]
-        parts = r.get("parts")
+    # 2. fallback dynamic combos that sum to 60
+    sizes = sorted([w for w, q in available.items() if q > 0 and w <= 60])
 
-        if width == 60 and not parts:
-            existing_60 += qty
-            continue
+    # generate 2- and 3-part combos
+    all_combos = []
 
-        if parts:
-            # parts sum 60 but user may want recombination → treat parts individually
-            for p in parts:
-                available[p] += qty
-        else:
-            available[width] += qty
+    for a, b in itertools.combinations_with_replacement(sizes, 2):
+        if a + b == 60:
+            all_combos.append([a, b])
 
-    # Combine widths to sum to 60
-    results = []
+    for a, b, c in itertools.combinations_with_replacement(sizes, 3):
+        if a + b + c == 60:
+            all_combos.append([a, b, c])
 
-    def combos_for_target(cnt: Counter, target=60):
-        sizes = sorted(cnt.keys())
-        combos = []
-        for a, b in itertools.combinations_with_replacement(sizes, 2):
-            if a + b == target:
-                combos.append([a, b])
-        for a, b, c in itertools.combinations_with_replacement(sizes, 3):
-            if a + b + c == target:
-                combos.append([a, b, c])
-        combos.sort(key=lambda x: (-len(x), -max(x)))
-        return combos
+    # sort larger-first
+    all_combos.sort(key=lambda c: (-len(c), -max(c)))
 
-    while True:
-        combos = combos_for_target(available)
-        if not combos:
-            break
-        c = combos[0]   # best combo
-        need = Counter(c)
-        max_batch = min(available[w] // need[w] for w in need.keys())
+    for combo in all_combos:
+        need = Counter(combo)
+        max_create = min(available[w] // need[w] for w in need)
+        if max_create > 0:
+            result.append({
+                "composition": "/".join(map(str, combo)),
+                "width_final": 60,
+                "qty": max_create,
+            })
+            for w in need:
+                available[w] -= need[w] * max_create
 
-        if max_batch == 0:
-            break
-
-        results.append({
-            "composition": "/".join(str(i) for i in c),
-            "width_final": 60,
-            "qty": max_batch
-        })
-
-        for w in need:
-            available[w] -= need[w] * max_batch
-
-    # Add standalone leftover widths
+    # 3. leftovers
+    leftovers = []
     for w, q in available.items():
         if q > 0:
-            results.append({
+            leftovers.append({
                 "composition": str(w),
                 "width_final": w,
                 "qty": q
             })
 
-    # Add existing 60
-    if existing_60 > 0:
-        results.insert(0, {
-            "composition": "60",
-            "width_final": 60,
-            "qty": existing_60
-        })
+    return result + leftovers
 
-    # Use most common length
+
+# ================================================
+# CONSOLIDATE GROUPS BY ITEM + VLT
+# ================================================
+def consolidate_group(df):
+    available = Counter()
+    lengths = []
+
+    for _, r in df.iterrows():
+        qty = int(r["qty"])
+        width = r["width"]
+        length = r["length"]
+        parts = r.get("parts")
+
+        if length:
+            lengths.append(length)
+
+        if parts:
+            # explode parts: each roll produces width-components
+            for p in parts:
+                available[p] += qty
+        else:
+            available[width] += qty
+
+    final = consolidate_with_priority(available)
+
+    # use majority length
     length_val = max(set(lengths), key=lengths.count) if lengths else None
 
-    final = []
-    for r in results:
-        final.append({
-            "composition": r["composition"],
-            "width": r["width_final"],
-            "length": length_val,
-            "qty": r["qty"]
-        })
+    for r in final:
+        r["length"] = length_val
 
     return final
 
@@ -204,6 +225,7 @@ if uploaded:
     rows = json.loads(json_text)
 
     df_norm = pd.DataFrame(rows)
+    st.dataframe(df_norm.head(30))
 
     # STEP 3: parse size fields properly
     widths = []
