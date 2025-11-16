@@ -166,6 +166,11 @@ client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])
 # st.write([m.name for m in models])
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
+# Initialize Gemini client (text model)
+if "llm" not in st.session_state:
+    client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])
+    st.session_state["llm"] = client
+
 if uploaded:
     suffix = uploaded.name.lower()
 
