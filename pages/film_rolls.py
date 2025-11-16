@@ -5,7 +5,7 @@ from io import BytesIO
 from collections import Counter
 import itertools
 import json
-import google.generativeai as genai
+from google import genai
 
 # ----------------------------
 # Gemini Prompt
@@ -163,8 +163,8 @@ def consolidate_group(df):
 st.title("Film Roll Width Consolidation (Simplified Version)")
 
 if "vision" not in st.session_state:
-    genai.configure(api_key=st.secrets['gemini-api']['api_token'])
-    st.session_state["vision"] = genai.GenerativeModel("gemini-1.5-flash")
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    st.session_state["vision"] = client
     
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
