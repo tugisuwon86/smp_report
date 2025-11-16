@@ -185,7 +185,9 @@ st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
 # st.write([m.name for m in models])
-uploaded = st.file_uploader("Upload Excel / Image / PDF")
+uploaded_files = st.file_uploader(
+    "Upload one or multiple files (Excel, Image, PDF)",
+)
 
 if uploaded:
     suffix = uploaded.name.lower()
