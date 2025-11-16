@@ -166,11 +166,6 @@ client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])
 # st.write([m.name for m in models])
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
-# Initialize Gemini client (text model)
-if "llm" not in st.session_state:
-    client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])
-    st.session_state["llm"] = client
-
 if uploaded:
     suffix = uploaded.name.lower()
 
@@ -200,9 +195,11 @@ if uploaded:
             st.error("Unsupported file")
 
     # STEP 2: Normalize table using LLM
-    llm = st.session_state["llm"]
     prompt = LLM_PROMPT.format(data=raw_data)
-    out = llm.generate_text(prompt)
+    out = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[prompt]
+    )
     json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
     rows = json.loads(json_text)
 
