@@ -38,6 +38,19 @@ Table text begins below:
 ----
 """
 
+
+# ================================================
+# Load META file (meta.txt)
+# ================================================
+@st.cache_data
+def load_meta():
+    df = pd.read_csv("meta.txt", sep="|")
+    df.columns = ["type_code", "techpia_code", "description", "unit_price"]
+    # Extract VLT value from Techpia code like “MEGAMAX 20”
+    df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
+    df["vlt"] = df["vlt"].astype(str)
+    return df
+    
 # ----------------------------
 # Width extraction
 # ----------------------------
@@ -261,8 +274,38 @@ if uploaded:
 
     df_final = pd.DataFrame(final_rows)
 
-    st.success("Final Consolidated Table")
-    st.dataframe(df_final)
+    # ============================================
+    # 4. JOIN WITH META (by vlt)
+    # ============================================
+    df_join = df_final.merge(meta_df, on="vlt", how="left")
 
-    st.download_button("Download CSV", df_final.to_csv(index=False), "output.csv")
+    # Thickness is not provided; set empty
+    df_join["thickness"] = ""
+
+    # Amount = Unit Price × Qty
+    df_join["amount"] = df_join["unit_price"].fillna(0) * df_join["qty"]
+
+    # Final column order
+    df_join = df_join[
+        [
+            "techpia_code",
+            "type_code",
+            "description",
+            "vlt",
+            "width",
+            "length",
+            "thickness",
+            "qty",
+            "unit_price",
+            "amount",
+            "source_file",
+            "composition",
+            "item"
+        ]
+    ]
+
+    st.subheader("Final Merged Table")
+    st.dataframe(df_join, use_container_width=True)
+
+    st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
 
