@@ -13,3 +13,4 @@ python-dotenv>=1.0.1
 jsonschema>=4.23.0
 openai>=1.2.3
 google-genai
+google.generativeai
