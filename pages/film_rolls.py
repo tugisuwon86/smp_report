@@ -162,8 +162,8 @@ def consolidate_group(df):
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
-models = client.models.list()
-st.write([m.name for m in models])
+# models = client.models.list()
+# st.write([m.name for m in models])
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
 if uploaded:
@@ -180,7 +180,7 @@ if uploaded:
         if suffix.endswith(("png", "jpg", "jpeg")):
             img = Image.open(uploaded)
             result = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-2.5-flash",
                 contents=[img]
             )
             
