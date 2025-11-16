@@ -50,7 +50,7 @@ def load_meta():
     df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
     df["vlt"] = df["vlt"].astype(str)
     return df
-    
+meta_df = load_meta()
 # ----------------------------
 # Width extraction
 # ----------------------------
