@@ -6,7 +6,7 @@ from collections import Counter
 import itertools
 import json
 from google import genai
-
+st.write(genai.__file__)
 # ----------------------------
 # Gemini Prompt
 # ----------------------------
@@ -162,6 +162,8 @@ def consolidate_group(df):
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
+models = client.models.list()
+st.write([m.name for m in models])
 uploaded = st.file_uploader("Upload Excel / Image / PDF")
 
 if uploaded:
