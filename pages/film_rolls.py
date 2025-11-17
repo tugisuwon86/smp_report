@@ -189,6 +189,71 @@ def consolidate_group(df):
 
     return final
 
+from rapidfuzz import fuzz
+
+def extract_width_from_meta(desc):
+    """
+    Extract width from meta description like:
+    'Megamax, Ultimate Ceramic 20% 40"X100''
+    Returns integer width (e.g., 40)
+    """
+    m = re.search(r'(\d+)\s*["]?X', desc)
+    if m:
+        return int(m.group(1))
+    return None
+
+
+def best_meta_match(row, meta_df):
+    """
+    row contains:
+        item, vlt, composition, width_final, length
+    
+    meta_df contains:
+        type_code, techpia_code, description, unit_price, vlt
+    
+    Returns best matching meta row (or None)
+    """
+    item = str(row["item"])
+    vlt = str(row["vlt"]).strip()
+    composition = str(row["composition"])
+    width_final = int(row["width"])
+
+    # ---- 1. Filter by matching VLT ----
+    candidates = meta_df[meta_df["vlt"] == vlt]
+    if candidates.empty:
+        return None
+
+    # ---- 2. Determine width signal ----
+    # If composition present → use the largest numeric width inside composition
+    comp_widths = [int(x) for x in re.findall(r'\d+', composition)]
+    if comp_widths:
+        primary_width_signal = max(comp_widths)
+    else:
+        primary_width_signal = width_final
+
+    best_score = -1
+    best_row = None
+
+    for _, m in candidates.iterrows():
+        meta_width = extract_width_from_meta(m["description"])
+
+        # width match score (0 or 100)
+        width_score = 100 if meta_width == primary_width_signal else 0
+
+        # fuzzy score for item name
+        item_score = fuzz.token_set_ratio(item, m["description"])
+        item_score2 = fuzz.token_set_ratio(item, m["techpia_code"])
+        fuzzy_score = max(item_score, item_score2)
+
+        # combined score
+        total_score = fuzzy_score + width_score
+
+        if total_score > best_score:
+            best_score = total_score
+            best_row = m
+
+    return best_row
+
 
 # ----------------------------
 # Streamlit UI
@@ -277,7 +342,42 @@ if uploaded:
     # ============================================
     # 4. JOIN WITH META (by vlt)
     # ============================================
-    df_join = df_final.merge(meta_df, on="vlt", how="left")
+    matched_rows = []
+
+    for _, r in df_final.iterrows():
+        meta_match = best_meta_match(r, meta_df)
+    
+        if meta_match is not None:
+            type_code = meta_match["type_code"]
+            techpia_code = meta_match["techpia_code"]
+            description = meta_match["description"]
+            unit_price = float(meta_match["unit_price"])
+        else:
+            type_code = ""
+            techpia_code = ""
+            description = ""
+            unit_price = 0
+    
+        amount = unit_price * r["qty"]
+    
+        matched_rows.append({
+            "techpia_code": techpia_code,
+            "type_code": type_code,
+            "description": description,
+            "vlt": r["vlt"],
+            "width": r["width"],
+            "length": r["length"],
+            "thickness": "",
+            "quantity": r["qty"],
+            "unit_price": unit_price,
+            "amount": amount,
+            "composition": r["composition"],
+            "item": r["item"],
+            "source_file": r["source_file"],
+        })
+    
+    df_join = pd.DataFrame(matched_rows)
+
 
     # Thickness is not provided; set empty
     df_join["thickness"] = ""
