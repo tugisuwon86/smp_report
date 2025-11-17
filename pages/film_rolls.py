@@ -377,13 +377,6 @@ if uploaded:
     
     df_join = pd.DataFrame(matched_rows)
 
-
-    # Thickness is not provided; set empty
-    df_join["thickness"] = ""
-
-    # Amount = Unit Price × Qty
-    df_join["amount"] = df_join["unit_price"].fillna(0) * df_join["qty"]
-
     # Final column order
     # df_join = df_join[["techpia_code", "type_code", "description", "vlt", "width", "length", "thickness", "qty", "unit_price", "amount", "source_file", "composition", "item"]]
 
