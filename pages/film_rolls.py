@@ -373,7 +373,6 @@ if uploaded:
             "amount": amount,
             "composition": r["composition"],
             "item": r["item"],
-            "source_file": r["source_file"],
         })
     
     df_join = pd.DataFrame(matched_rows)
