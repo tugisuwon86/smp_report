@@ -208,7 +208,7 @@ def best_meta_match(row, meta_df):
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["vlt"] == vlt]
-    candidates = candidates[candidates["description"].contains(str(width_final))]
+    candidates = candidates[candidates["description"].str.contains(str(width_final))]
     if candidates.empty:
         return None
 
