@@ -15,3 +15,4 @@ openai>=1.2.3
 google-genai
 rapidfuzz 
 openpyxl
+extract_msg
