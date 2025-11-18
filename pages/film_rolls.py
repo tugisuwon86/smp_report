@@ -51,8 +51,19 @@ def load_meta():
     df["vlt"] = df["vlt"].astype(str)
     return df
 meta_df = load_meta()
-st.dataframe(meta_df.head(5))
 
+import extract_msg
+
+def extract_text_from_msg(uploaded_file):
+    msg = extract_msg.Message(uploaded_file)
+    msg_message = msg.body or ""
+
+    # Attachments?
+    attachments = []
+    for att in msg.attachments:
+        attachments.append(att)
+    return msg_message, attachments
+    
 # ----------------------------
 # Width extraction
 # ----------------------------
@@ -256,6 +267,10 @@ if uploaded:
     if suffix.endswith(("xlsx", "xls")):
         df = pd.read_excel(uploaded)
         raw_data = df.to_csv(index=False)
+    elif suffix.endswith(".msg"):
+        text, attachments = extract_text_from_msg(uploaded)
+    
+        extracted_text = text
     else:
         # Image or PDF → use Gemini Vision
         from PIL import Image
