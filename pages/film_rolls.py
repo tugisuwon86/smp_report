@@ -270,7 +270,7 @@ if uploaded:
     elif suffix.endswith(".msg"):
         text, attachments = extract_text_from_msg(uploaded)
     
-        extracted_text = text
+        raw_data = text
     else:
         # Image or PDF → use Gemini Vision
         from PIL import Image
