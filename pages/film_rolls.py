@@ -208,6 +208,7 @@ def best_meta_match(row, meta_df):
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["vlt"] == vlt]
+    candidates = candidates[candidates["description"].contains(str(width_final))]
     if candidates.empty:
         return None
 
@@ -225,10 +226,8 @@ def best_meta_match(row, meta_df):
 
         # 3️⃣ Fuzzy match on item name
         score1 = fuzz.token_set_ratio(item, m["description"])
-        st.write(score1, item, meta_width, m['description'])
         score2 = fuzz.token_set_ratio(item, m["techpia_code"])
         item_score = max(score1, score2)
-        st.write(score2, item, meta_width, m['techpia_code'])
 
         total_score = width_score + item_score
 
@@ -349,14 +348,12 @@ if uploaded:
             "type_code": type_code,
             "description": description,
             "vlt": r["vlt"],
-            "width": r["width"],
+            "width": str(r["width"]) + ' (' + r["composition"] + ")",
             "length": r["length"],
             "thickness": "",
             "quantity": r["qty"],
-            "unit_price": unit_price,
-            "amount": amount,
-            "composition": r["composition"],
-            "item": r["item"],
+            "unit_price": f"${unit_price:,.2f}",
+            "amount": f"${amount:,.2f}",
         })
     
     df_join = pd.DataFrame(matched_rows)
