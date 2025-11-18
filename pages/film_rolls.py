@@ -51,6 +51,8 @@ def load_meta():
     df["vlt"] = df["vlt"].astype(str)
     return df
 meta_df = load_meta()
+st.dataframe(meta_df.head(5))
+
 # ----------------------------
 # Width extraction
 # ----------------------------
@@ -223,8 +225,10 @@ def best_meta_match(row, meta_df):
 
         # 3️⃣ Fuzzy match on item name
         score1 = fuzz.token_set_ratio(item, m["description"])
+        st.write(score1, item, meta_width, m['description'])
         score2 = fuzz.token_set_ratio(item, m["techpia_code"])
         item_score = max(score1, score2)
+        st.write(score2, item, meta_width, m['techpia_code'])
 
         total_score = width_score + item_score
 
