@@ -192,11 +192,7 @@ def consolidate_group(df):
 from rapidfuzz import fuzz
 
 def extract_width_from_meta(desc):
-    """
-    Extract width from meta description like:
-    'Megamax, Ultimate Ceramic 20% 40"X100''
-    Returns integer width (e.g., 40)
-    """
+    # Example: 'Megamax 20% 40"X100' → 40
     m = re.search(r'(\d+)\s*["]?X', desc)
     if m:
         return int(m.group(1))
@@ -204,32 +200,14 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df):
-    """
-    row contains:
-        item, vlt, composition, width_final, length
-    
-    meta_df contains:
-        type_code, techpia_code, description, unit_price, vlt
-    
-    Returns best matching meta row (or None)
-    """
     item = str(row["item"])
     vlt = str(row["vlt"]).strip()
-    composition = str(row["composition"])
     width_final = int(row["width"])
 
-    # ---- 1. Filter by matching VLT ----
+    # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["vlt"] == vlt]
     if candidates.empty:
         return None
-
-    # ---- 2. Determine width signal ----
-    # If composition present → use the largest numeric width inside composition
-    comp_widths = [int(x) for x in re.findall(r'\d+', composition)]
-    if comp_widths:
-        primary_width_signal = max(comp_widths)
-    else:
-        primary_width_signal = width_final
 
     best_score = -1
     best_row = None
@@ -237,24 +215,25 @@ def best_meta_match(row, meta_df):
     for _, m in candidates.iterrows():
         meta_width = extract_width_from_meta(m["description"])
 
-        # width match score (0 or 100)
-        width_score = 100 if meta_width == primary_width_signal else 0
+        # 2️⃣ Width match (only when width_final < 60)
+        if width_final < 60 and meta_width == width_final:
+            width_score = 100
+        else:
+            width_score = 0
 
-        # fuzzy score for item name
-        item_score = fuzz.token_set_ratio(item, m["description"])
-        item_score2 = fuzz.token_set_ratio(item, m["techpia_code"])
-        fuzzy_score = max(item_score, item_score2)
+        # 3️⃣ Fuzzy match on item name
+        score1 = fuzz.token_set_ratio(item, m["description"])
+        score2 = fuzz.token_set_ratio(item, m["techpia_code"])
+        item_score = max(score1, score2)
 
-        # combined score
-        total_score = fuzzy_score + width_score
+        total_score = width_score + item_score
 
         if total_score > best_score:
             best_score = total_score
             best_row = m
 
     return best_row
-
-
+    
 # ----------------------------
 # Streamlit UI
 # ----------------------------
@@ -305,6 +284,7 @@ if uploaded:
     rows = json.loads(json_text)
 
     df_norm = pd.DataFrame(rows)
+    df_norm["item"] = df_norm["item"].ffill()
     st.dataframe(df_norm.head(30))
 
     # STEP 3: parse size fields properly
