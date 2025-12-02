@@ -240,9 +240,9 @@ def best_meta_match(row, meta_df):
     st.write(item, vlt, width_final)
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
-    st.dataframe(candidates.head(2))
     candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     candidates = candidates[candidates["compare"].str.contains(str(width_final))]
+    st.dataframe(candidates.head(2))
     if candidates.empty:
         return None
 
@@ -250,7 +250,7 @@ def best_meta_match(row, meta_df):
     best_row = None
 
     for _, m in candidates.iterrows():
-        meta_width = extract_width_from_meta(m["Proforma_Invoice_Width"])
+        meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
         st.write('candidate: ', meta_width, width_final)
         # 2️⃣ Width match (only when width_final < 60)
         if width_final < 60 and meta_width == width_final:
@@ -406,7 +406,7 @@ if uploaded_files:
             "vlt": r["vlt"],
             "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else "",
             "length": r["length"],
-            "thickness": "1.5",
+            "thickness": "1.5" if 'IC-ALPU' not in type_code,
             "quantity": r["qty"],
             "unit_price": f"${unit_price:,.2f}",
             "amount": f"${amount:,.2f}",
