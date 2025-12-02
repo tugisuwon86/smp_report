@@ -44,12 +44,33 @@ Table text begins below:
 # ================================================
 @st.cache_data
 def load_meta():
-    df = pd.read_csv("pages/meta.txt", sep="|")
-    df.columns = ["type_code", "techpia_code", "description", "unit_price"]
-    # Extract VLT value from Techpia code like “MEGAMAX 20”
-    df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
-    df["vlt"] = df["vlt"].astype(str)
-    return df
+    xlsx = pd.ExcelFile("CNT Product Description (1).xlsx")
+    dfs = {}
+    
+    for sheet in xlsx.sheet_names:
+        df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
+    
+        # flatten multi-level columns
+        df.columns = [
+            f"{h1.strip()}_{h2.strip()}"
+            for h1, h2 in df.columns
+        ]
+    
+        # optional clean
+        df.columns = (
+            df.columns.str.replace(" ", "_")
+                      .str.replace("(", "")
+                      .str.replace(")", "")
+        )
+    
+        dfs[sheet] = df
+    df_all = pd.concat(dfs.values(), ignore_index=True)
+    # df = pd.read_csv("pages/meta.txt", sep="|")
+    # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
+    # # Extract VLT value from Techpia code like “MEGAMAX 20”
+    # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
+    # df["vlt"] = df["vlt"].astype(str)
+    return df_all
 meta_df = load_meta()
 
 import extract_msg
@@ -219,7 +240,8 @@ def best_meta_match(row, meta_df):
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["vlt"] == vlt]
-    candidates = candidates[candidates["description"].str.contains(str(width_final))]
+    candidates["compare"] = candidates["Proforma_Invoice_Description"] + " " + candidates["Proforma_Invoice_Width"]
+    candidates = candidates[candidates["compare"].str.contains(str(width_final))]
     if candidates.empty:
         return None
 
@@ -256,6 +278,10 @@ st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
 # st.write([m.name for m in models])
+option = st.selectbox(
+    "Proforma vs Purchase Order",
+    ("Proforma", "Purchase Order")
+)
 uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
@@ -350,10 +376,16 @@ if uploaded:
         meta_match = best_meta_match(r, meta_df)
     
         if meta_match is not None:
-            type_code = meta_match["type_code"]
-            techpia_code = meta_match["techpia_code"]
-            description = meta_match["description"]
-            unit_price = float(meta_match["unit_price"])
+            if option == 'Proforma":
+                type_code = meta_match["Proforma_Invoice_Type_Code"]
+                techpia_code = meta_match["techpia_code"]
+                description = meta_match["Proforma_Invoice_Description"]
+                unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
+            elif:
+                type_code = meta_match["Purchase_Order_Type_Code"]
+                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                description = meta_match["Purchase_Order_Description"]
+                unit_price = float(meta_match["Purchase_Order_Unit_Price"])
         else:
             type_code = ""
             techpia_code = ""
