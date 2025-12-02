@@ -406,7 +406,7 @@ if uploaded_files:
             "vlt": r["vlt"],
             "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else "",
             "length": r["length"],
-            "thickness": "1.5" if 'IC-ALPU' not in type_code,
+            "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
             "quantity": r["qty"],
             "unit_price": f"${unit_price:,.2f}",
             "amount": f"${amount:,.2f}",
