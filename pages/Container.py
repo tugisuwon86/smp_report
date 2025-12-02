@@ -261,8 +261,8 @@ def best_meta_match(row, meta_df):
         # 3️⃣ Fuzzy match on item name
         # score1 = fuzz.token_set_ratio(item, m["description"])
         score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
-        score2 = fuzz.token_set_ratio(item, m["compare"])
-        item_score = max(score1, score2)
+        score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
+        item_score = score1 + score2
 
         total_score = width_score + item_score
 
