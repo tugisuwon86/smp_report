@@ -241,9 +241,9 @@ def best_meta_match(row, meta_df):
     st.write(item, vlt, width_final)
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
-    candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
-    candidates = candidates[candidates["compare"].str.contains(str(width_final))]
-    st.dataframe(candidates.head(2))
+    # candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
+    candidates = candidates[candidates["Proforma_Invoice_Width"].str.contains(str(width_final))]
+    # st.dataframe(candidates.head(2))
     if candidates.empty:
         return None
 
@@ -260,7 +260,7 @@ def best_meta_match(row, meta_df):
 
         # 3️⃣ Fuzzy match on item name
         # score1 = fuzz.token_set_ratio(item, m["description"])
-        score1 = 0
+        score1 = fuzz.token_set_ratio(row["composition"], m["Proforma_Invoice_Width"])
         score2 = fuzz.token_set_ratio(item, m["compare"])
         item_score = max(score1, score2)
 
