@@ -277,7 +277,7 @@ def best_meta_match(row, meta_df):
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
-option = "Proforma"
+# option = "Proforma"
 option = st.selectbox(
     "Proforma vs Purchase Order",
     ("Proforma", "Purchase Order")
@@ -376,7 +376,7 @@ if uploaded:
         meta_match = best_meta_match(r, meta_df)
     
         if meta_match is not None:
-            if option == 'Proforma":
+            if option == "Proforma":
                 type_code = meta_match["Proforma_Invoice_Type_Code"]
                 techpia_code = meta_match["techpia_code"]
                 description = meta_match["Proforma_Invoice_Description"]
