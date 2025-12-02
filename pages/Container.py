@@ -286,6 +286,7 @@ uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
 )
+st.write(option)
 all_rows = []
 if uploaded:
     for uploaded in uploaded_files:
