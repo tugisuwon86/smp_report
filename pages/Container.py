@@ -278,6 +278,10 @@ st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
 # option = "Proforma"
+option_company = st.selectbox(
+    "Company Name: ",
+    ("Geoshield", "Hypertech", "Others")
+)
 option = st.selectbox(
     "Proforma vs Purchase Order",
     ("Proforma", "Purchase Order")
@@ -381,7 +385,7 @@ if uploaded:
                 techpia_code = meta_match["techpia_code"]
                 description = meta_match["Proforma_Invoice_Description"]
                 unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-            elif:
+            elif option == "Purchase Order":
                 type_code = meta_match["Purchase_Order_Type_Code"]
                 techpia_code = meta_match["Purchase_Order_Techpia_Code"]
                 description = meta_match["Purchase_Order_Description"]
