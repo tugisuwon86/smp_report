@@ -251,7 +251,6 @@ def best_meta_match(row, meta_df):
 
     for _, m in candidates.iterrows():
         meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
-        st.write('candidate: ', meta_width, width_final)
         # 2️⃣ Width match (only when width_final < 60)
         if width_final < 60 and meta_width == width_final:
             width_score = 100
@@ -384,7 +383,7 @@ if uploaded_files:
         if meta_match is not None:
             if option == "Proforma":
                 type_code = meta_match["Proforma_Invoice_Type_Code"]
-                techpia_code = meta_match["techpia_code"]
+                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
                 description = meta_match["Proforma_Invoice_Description"]
                 unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
             elif option == "Purchase Order":
