@@ -44,7 +44,7 @@ Table text begins below:
 # ================================================
 @st.cache_data
 def load_meta():
-    xlsx = pd.ExcelFile("CNT Product Description (1).xlsx")
+    xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
     dfs = {}
     
     for sheet in xlsx.sheet_names:
