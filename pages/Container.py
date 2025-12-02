@@ -234,6 +234,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df):
+    st.write(row)
     item = str(row["item"])
     vlt = int(str(row["vlt"]).strip().replace('%', ''))
     width_final = int(row["width"])
@@ -404,7 +405,7 @@ if uploaded_files:
             "techpia_code": techpia_code,
             "description": description,
             "vlt": r["vlt"],
-            "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else "",
+            "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
             "length": r["length"],
             "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
             "quantity": r["qty"],
