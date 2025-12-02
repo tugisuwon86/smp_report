@@ -291,7 +291,7 @@ uploaded_files = st.file_uploader(
     accept_multiple_files = True
 )
 all_rows = []
-if uploaded:
+if uploaded_files:
     for uploaded in uploaded_files:
         suffix = uploaded.name.lower()
     
