@@ -235,7 +235,7 @@ def extract_width_from_meta(desc):
 
 def best_meta_match(row, meta_df):
     item = str(row["item"])
-    vlt = int(str(row["vlt"]).strip())
+    vlt = int(str(row["vlt"]).strip().replace('%', ''))
     width_final = int(row["width"])
     st.write(item, vlt, width_final)
     # 1️⃣ Filter by matching VLT
