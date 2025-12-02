@@ -277,7 +277,7 @@ def best_meta_match(row, meta_df):
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
-# st.write([m.name for m in models])
+option = "Proforma"
 option = st.selectbox(
     "Proforma vs Purchase Order",
     ("Proforma", "Purchase Order")
@@ -286,7 +286,6 @@ uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
 )
-st.write(option)
 all_rows = []
 if uploaded:
     for uploaded in uploaded_files:
