@@ -241,7 +241,7 @@ def best_meta_match(row, meta_df):
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
     st.dataframe(candidates.head(2))
-    candidates["compare"] = candidates["Proforma_Invoice_Description"].str + " " + candidates["Proforma_Invoice_Width"].str
+    candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     candidates = candidates[candidates["compare"].str.contains(str(width_final))]
     if candidates.empty:
         return None
