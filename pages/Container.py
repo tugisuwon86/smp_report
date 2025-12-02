@@ -259,8 +259,9 @@ def best_meta_match(row, meta_df):
             width_score = 0
 
         # 3️⃣ Fuzzy match on item name
-        score1 = fuzz.token_set_ratio(item, m["description"])
-        score2 = fuzz.token_set_ratio(item, m["techpia_code"])
+        # score1 = fuzz.token_set_ratio(item, m["description"])
+        score1 = 0
+        score2 = fuzz.token_set_ratio(item, m["compare"])
         item_score = max(score1, score2)
 
         total_score = width_score + item_score
