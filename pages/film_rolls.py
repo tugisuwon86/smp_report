@@ -256,50 +256,54 @@ st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
 # models = client.models.list()
 # st.write([m.name for m in models])
-uploaded = st.file_uploader(
+uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
+    accept_multiple_files = True
 )
-
+all_rows = []
 if uploaded:
-    suffix = uploaded.name.lower()
-
-    # STEP 1: extract data from the input file
-    if suffix.endswith(("xlsx", "xls")):
-        df = pd.read_excel(uploaded)
-        raw_data = df.to_csv(index=False)
-    elif suffix.endswith(".msg"):
-        text, attachments = extract_text_from_msg(uploaded)
+    for uploaded in uploaded_files:
+        suffix = uploaded.name.lower()
     
-        raw_data = text
-    else:
-        # Image or PDF → use Gemini Vision
-        from PIL import Image
-        import fitz
-        if suffix.endswith(("png", "jpg", "jpeg")):
-            img = Image.open(uploaded)
-            result = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[img]
-            )
-            
-            raw_data = result.text
-        elif suffix.endswith("pdf"):
-            pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
-            text = ""
-            for p in pdf:
-                text += p.get_text()
+        # STEP 1: extract data from the input file
+        if suffix.endswith(("xlsx", "xls")):
+            df = pd.read_excel(uploaded)
+            raw_data = df.to_csv(index=False)
+        elif suffix.endswith(".msg"):
+            text, attachments = extract_text_from_msg(uploaded)
+        
             raw_data = text
         else:
-            st.error("Unsupported file")
+            # Image or PDF → use Gemini Vision
+            from PIL import Image
+            import fitz
+            if suffix.endswith(("png", "jpg", "jpeg")):
+                img = Image.open(uploaded)
+                result = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[img]
+                )
+                
+                raw_data = result.text
+            elif suffix.endswith("pdf"):
+                pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
+                text = ""
+                for p in pdf:
+                    text += p.get_text()
+                raw_data = text
+            else:
+                st.error("Unsupported file")
+    
+        # STEP 2: Normalize table using LLM
+        prompt = LLM_PROMPT.format(data=raw_data)
+        out = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[prompt]
+        )
+        json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
+        rows = json.loads(json_text)
 
-    # STEP 2: Normalize table using LLM
-    prompt = LLM_PROMPT.format(data=raw_data)
-    out = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[prompt]
-    )
-    json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
-    rows = json.loads(json_text)
+        all_rows += rows
 
     df_norm = pd.DataFrame(rows)
     df_norm["item"] = df_norm["item"].ffill()
@@ -359,13 +363,13 @@ if uploaded:
         amount = unit_price * r["qty"]
     
         matched_rows.append({
-            "techpia_code": techpia_code,
             "type_code": type_code,
+            "techpia_code": techpia_code,
             "description": description,
             "vlt": r["vlt"],
-            "width": str(r["width"]) + ' (' + r["composition"] + ")",
+            "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else "",
             "length": r["length"],
-            "thickness": "",
+            "thickness": "1.5",
             "quantity": r["qty"],
             "unit_price": f"${unit_price:,.2f}",
             "amount": f"${amount:,.2f}",
