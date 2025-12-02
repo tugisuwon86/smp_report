@@ -239,7 +239,7 @@ def best_meta_match(row, meta_df):
     width_final = int(row["width"])
 
     # 1️⃣ Filter by matching VLT
-    candidates = meta_df[meta_df["vlt"] == vlt]
+    candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
     candidates["compare"] = candidates["Proforma_Invoice_Description"] + " " + candidates["Proforma_Invoice_Width"]
     candidates = candidates[candidates["compare"].str.contains(str(width_final))]
     if candidates.empty:
