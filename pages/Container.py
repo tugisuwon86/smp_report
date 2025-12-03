@@ -6,7 +6,7 @@ from collections import Counter
 import itertools
 import json
 from google import genai
-st.write(genai.__file__)
+# st.write(genai.__file__)
 # ----------------------------
 # Gemini Prompt
 # ----------------------------
@@ -290,134 +290,138 @@ uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
 )
-all_rows = []
-if uploaded_files:
-    for uploaded in uploaded_files:
-        suffix = uploaded.name.lower()
-    
-        # STEP 1: extract data from the input file
-        if suffix.endswith(("xlsx", "xls")):
-            df = pd.read_excel(uploaded)
-            raw_data = df.to_csv(index=False)
-        elif suffix.endswith(".msg"):
-            text, attachments = extract_text_from_msg(uploaded)
-        
-            raw_data = text
-        else:
-            # Image or PDF → use Gemini Vision
-            from PIL import Image
-            import fitz
-            if suffix.endswith(("png", "jpg", "jpeg")):
-                img = Image.open(uploaded)
-                result = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[img]
-                )
+with st.form("Proceed"):
+    submitted = st.form_submit_button("Submit")
+
+    if submitted:
+        all_rows = []
+        if uploaded_files:
+            for uploaded in uploaded_files:
+                suffix = uploaded.name.lower()
+            
+                # STEP 1: extract data from the input file
+                if suffix.endswith(("xlsx", "xls")):
+                    df = pd.read_excel(uploaded)
+                    raw_data = df.to_csv(index=False)
+                elif suffix.endswith(".msg"):
+                    text, attachments = extract_text_from_msg(uploaded)
                 
-                raw_data = result.text
-            elif suffix.endswith("pdf"):
-                pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
-                text = ""
-                for p in pdf:
-                    text += p.get_text()
-                raw_data = text
-            else:
-                st.error("Unsupported file")
-    
-        # STEP 2: Normalize table using LLM
-        prompt = LLM_PROMPT.format(data=raw_data)
-        out = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[prompt]
-        )
-        json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
-        rows = json.loads(json_text)
-
-        all_rows += rows
-
-    df_norm = pd.DataFrame(rows)
-    df_norm["item"] = df_norm["item"].ffill()
-    st.dataframe(df_norm.head(30))
-
-    # STEP 3: parse size fields properly
-    widths = []
-    lengths = []
-    parts = []
-
-    for t in df_norm["original_size_text"]:
-        w, l, p = parse_size(t)
-        widths.append(w)
-        lengths.append(l)
-        parts.append(p)
-
-    df_norm["width"] = widths
-    df_norm["length"] = lengths
-    df_norm["parts"] = parts
-
-    # STEP 4: consolidate width sum to 60
-    final_rows = []
-
-    for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
-        out = consolidate_group(group)
-        for r in out:
-            final_rows.append({
-                "item": item,
-                "vlt": vlt,
-                "composition": r["composition"],
-                "width": r["width_final"],
-                "length": r["length"],
-                "qty": r["qty"]
-            })
-
-    df_final = pd.DataFrame(final_rows)
-
-    # ============================================
-    # 4. JOIN WITH META (by vlt)
-    # ============================================
-    matched_rows = []
-
-    for _, r in df_final.iterrows():
-        meta_match = best_meta_match(r, meta_df)
-    
-        if meta_match is not None:
-            if option == "Proforma":
-                type_code = meta_match["Proforma_Invoice_Type_Code"]
-                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                description = meta_match["Proforma_Invoice_Description"]
-                unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-            elif option == "Purchase Order":
-                type_code = meta_match["Purchase_Order_Type_Code"]
-                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                description = meta_match["Purchase_Order_Description"]
-                unit_price = float(meta_match["Purchase_Order_Unit_Price"])
-        else:
-            type_code = ""
-            techpia_code = ""
-            description = ""
-            unit_price = 0
-    
-        amount = unit_price * r["qty"]
-    
-        matched_rows.append({
-            "type_code": type_code,
-            "techpia_code": techpia_code,
-            "description": description,
-            "vlt": r["vlt"],
-            "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
-            "length": r["length"],
-            "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
-            "quantity": r["qty"],
-            "unit_price": f"${unit_price:,.2f}",
-            "amount": f"${amount:,.2f}",
-        })
-    
-    df_join = pd.DataFrame(matched_rows)
-
-    # Final column order
-    # df_join = df_join[["techpia_code", "type_code", "description", "vlt", "width", "length", "thickness", "qty", "unit_price", "amount", "source_file", "composition", "item"]]
-
-    st.subheader("Final Merged Table")
-    st.dataframe(df_join, use_container_width=True)
+                    raw_data = text
+                else:
+                    # Image or PDF → use Gemini Vision
+                    from PIL import Image
+                    import fitz
+                    if suffix.endswith(("png", "jpg", "jpeg")):
+                        img = Image.open(uploaded)
+                        result = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=[img]
+                        )
+                        
+                        raw_data = result.text
+                    elif suffix.endswith("pdf"):
+                        pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
+                        text = ""
+                        for p in pdf:
+                            text += p.get_text()
+                        raw_data = text
+                    else:
+                        st.error("Unsupported file")
+            
+                # STEP 2: Normalize table using LLM
+                prompt = LLM_PROMPT.format(data=raw_data)
+                out = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[prompt]
+                )
+                json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
+                rows = json.loads(json_text)
+        
+                all_rows += rows
+        
+            df_norm = pd.DataFrame(all_rows)
+            df_norm["item"] = df_norm["item"].ffill()
+            # st.dataframe(df_norm.head(30))
+        
+            # STEP 3: parse size fields properly
+            widths = []
+            lengths = []
+            parts = []
+        
+            for t in df_norm["original_size_text"]:
+                w, l, p = parse_size(t)
+                widths.append(w)
+                lengths.append(l)
+                parts.append(p)
+        
+            df_norm["width"] = widths
+            df_norm["length"] = lengths
+            df_norm["parts"] = parts
+        
+            # STEP 4: consolidate width sum to 60
+            final_rows = []
+        
+            for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
+                out = consolidate_group(group)
+                for r in out:
+                    final_rows.append({
+                        "item": item,
+                        "vlt": vlt,
+                        "composition": r["composition"],
+                        "width": r["width_final"],
+                        "length": r["length"],
+                        "qty": r["qty"]
+                    })
+        
+            df_final = pd.DataFrame(final_rows)
+        
+            # ============================================
+            # 4. JOIN WITH META (by vlt)
+            # ============================================
+            matched_rows = []
+        
+            for _, r in df_final.iterrows():
+                meta_match = best_meta_match(r, meta_df)
+            
+                if meta_match is not None:
+                    if option == "Proforma":
+                        type_code = meta_match["Proforma_Invoice_Type_Code"]
+                        techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                        description = meta_match["Proforma_Invoice_Description"]
+                        unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
+                    elif option == "Purchase Order":
+                        type_code = meta_match["Purchase_Order_Type_Code"]
+                        techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                        description = meta_match["Purchase_Order_Description"]
+                        unit_price = float(meta_match["Purchase_Order_Unit_Price"])
+                else:
+                    type_code = ""
+                    techpia_code = ""
+                    description = ""
+                    unit_price = 0
+            
+                amount = unit_price * r["qty"]
+            
+                matched_rows.append({
+                    "type_code": type_code,
+                    "techpia_code": techpia_code,
+                    "description": description,
+                    "vlt": r["vlt"],
+                    "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
+                    "length": r["length"],
+                    "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
+                    "quantity": r["qty"],
+                    "unit_price": f"${unit_price:,.2f}",
+                    "amount": f"${amount:,.2f}",
+                })
+            
+            df_join = pd.DataFrame(matched_rows)
+        
+            # Final column order
+            # df_join = df_join[["techpia_code", "type_code", "description", "vlt", "width", "length", "thickness", "qty", "unit_price", "amount", "source_file", "composition", "item"]]
+        
+            st.subheader("Final Merged Table")
+            st.dataframe(df_join, use_container_width=True)
 
     st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
 
