@@ -8,11 +8,20 @@ import json
 from google import genai
 
 from google.genai import types 
-# Note: RetryConfig is now accessed via 'types'
-retry_config = types.RetryConfig(
+retry_options = types.HttpRetryOptions(
+    # The number of attempts to make before failing the request
+    attempts=5, 
+    # The initial delay (in seconds)
     initial_delay=1.0, 
+    # The multiplier for the delay (e.g., 1s, 2s, 4s, 8s, 16s...)
     delay_multiplier=2.0,
-    max_retries=5, 
+    # The maximum delay (in seconds) between retries
+    max_delay=60.0
+)
+
+# 3. Create the HttpOptions object
+http_options = types.HttpOptions(
+    retry_options=retry_options
 )
 
 
@@ -285,7 +294,7 @@ def best_meta_match(row, meta_df):
 # ----------------------------
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
-client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], retry_config=retry_config)    
+client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], http_options=http_options)    
 # models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
