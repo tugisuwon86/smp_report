@@ -6,6 +6,24 @@ from collections import Counter
 import itertools
 import json
 from google import genai
+
+from google.generativeai.types import RetryConfig
+from google.api_core.retry import exponential_backoff
+## gemini fallback
+retry_config = RetryConfig(
+    # Set the initial delay (in seconds)
+    initial_delay=1.0, 
+    # Set the multiplier for the delay (e.g., 1s, 2s, 4s, 8s, 16s...)
+    delay_multiplier=2.0,
+    # Set the maximum delay (in seconds) between retries
+    max_delay=60.0,
+    # Set the total number of retries
+    max_retries=3, 
+    # By default, the SDK should retry 503 errors, but you can explicitly 
+    # configure which status codes to retry if needed.
+)
+
+
 # st.write(genai.__file__)
 # ----------------------------
 # Gemini Prompt
@@ -275,7 +293,7 @@ def best_meta_match(row, meta_df):
 # ----------------------------
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
-client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
+client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], retry_config=retry_config)    
 # models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
