@@ -7,20 +7,12 @@ import itertools
 import json
 from google import genai
 
-from google.generativeai.types import RetryConfig
-from google.api_core.retry import exponential_backoff
-## gemini fallback
-retry_config = RetryConfig(
-    # Set the initial delay (in seconds)
+from google.genai import types 
+# Note: RetryConfig is now accessed via 'types'
+retry_config = types.RetryConfig(
     initial_delay=1.0, 
-    # Set the multiplier for the delay (e.g., 1s, 2s, 4s, 8s, 16s...)
     delay_multiplier=2.0,
-    # Set the maximum delay (in seconds) between retries
-    max_delay=60.0,
-    # Set the total number of retries
-    max_retries=3, 
-    # By default, the SDK should retry 503 errors, but you can explicitly 
-    # configure which status codes to retry if needed.
+    max_retries=5, 
 )
 
 
