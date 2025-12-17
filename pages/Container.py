@@ -510,5 +510,6 @@ if submitted:
         st.subheader("Final Merged Table")
         st.dataframe(df_join, use_container_width=True)
 
-st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
+if df_join:
+    st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
 
