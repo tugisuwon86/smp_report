@@ -94,40 +94,6 @@ Table text begins below:
 ----
 """
 
-# ================================================
-# Load META file (meta.txt)
-# ================================================
-@st.cache_data
-def load_meta():
-    xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
-    dfs = {}
-    
-    for sheet in xlsx.sheet_names:
-        df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
-    
-        # flatten multi-level columns
-        df.columns = [
-            f"{h1.strip()}_{h2.strip()}"
-            for h1, h2 in df.columns
-        ]
-    
-        # optional clean
-        df.columns = (
-            df.columns.str.replace(" ", "_")
-                      .str.replace("(", "")
-                      .str.replace(")", "")
-        )
-        st.write(sheet)
-        st.dataframe(df.head(5))
-        dfs[sheet] = df
-    df_all = pd.concat(dfs.values(), ignore_index=True)
-    # df = pd.read_csv("pages/meta.txt", sep="|")
-    # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
-    # # Extract VLT value from Techpia code like “MEGAMAX 20”
-    # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
-    # df["vlt"] = df["vlt"].astype(str)
-    return df_all
-meta_df = load_meta()
 
 import extract_msg
 
@@ -344,10 +310,10 @@ def best_meta_match(row, meta_df):
         score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
         score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
         item_score = score1 + score2
-        st.write(item, m, item_score)
         total_score = width_score + item_score
 
         if total_score > best_score:
+            st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
             best_score = total_score
             best_row = m
 
@@ -363,7 +329,7 @@ models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
     "Company Name: ",
-    ("GEOSHIELD", "HITEK", "Others")
+    ("GEOSHIELD", "Hitek", "UVIRON")
 )
 option = st.selectbox(
     "Proforma vs Purchase Order",
@@ -377,6 +343,40 @@ with st.form("Proceed"):
     submitted = st.form_submit_button("Submit")
 
 if submitted:
+    # ================================================
+    # Load META file (meta.txt)
+    # ================================================
+    @st.cache_data
+    def load_meta(option_company):
+        xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
+        dfs = {}
+        
+        for sheet in xlsx.sheet_names:
+            if sheet == option_company:
+                df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
+            
+                # flatten multi-level columns
+                df.columns = [
+                    f"{h1.strip()}_{h2.strip()}"
+                    for h1, h2 in df.columns
+                ]
+            
+                # optional clean
+                df.columns = (
+                    df.columns.str.replace(" ", "_")
+                              .str.replace("(", "")
+                              .str.replace(")", "")
+                )
+                dfs[sheet] = df
+        df_all = pd.concat(dfs.values(), ignore_index=True)
+        # df = pd.read_csv("pages/meta.txt", sep="|")
+        # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
+        # # Extract VLT value from Techpia code like “MEGAMAX 20”
+        # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
+        # df["vlt"] = df["vlt"].astype(str)
+        return df_all
+    meta_df = load_meta(option_company)
+    
     all_rows = []
     if uploaded_files:
         for uploaded in uploaded_files:
