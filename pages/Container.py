@@ -109,7 +109,8 @@ def load_meta():
                       .str.replace("(", "")
                       .str.replace(")", "")
         )
-    
+        st.write(sheet)
+        st.dataframe(df.head(5))
         dfs[sheet] = df
     df_all = pd.concat(dfs.values(), ignore_index=True)
     # df = pd.read_csv("pages/meta.txt", sep="|")
