@@ -270,7 +270,7 @@ def consolidate_group(df):
         for _, r in df.iterrows():
             out.append({
                 "width_final": r["width"],
-                "composition": "/".join([str(x) for x in r["composition"]]),
+                "composition": "/".join([str(x) for x in r["composition"]]) if r["composition"] is not None else None,
                 "qty": int(r["qty"]),
                 "length": r["length"]
             })
