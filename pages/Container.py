@@ -324,7 +324,8 @@ def best_meta_match(row, meta_df):
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], http_options=http_options)    
-# models = client.models.list()
+models = client.models.list()
+st.write(models)
 # option = "Proforma"
 option_company = st.selectbox(
     "Company Name: ",
