@@ -388,7 +388,8 @@ if submitted:
     
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
-        # st.dataframe(df_norm.head(30))
+        st.write("Extracted information")
+        st.dataframe(df_norm.head(30))
     
         # STEP 3: parse size fields properly
         widths = []
