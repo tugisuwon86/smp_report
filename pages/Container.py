@@ -313,7 +313,7 @@ def best_meta_match(row, meta_df):
         total_score = width_score + item_score
 
         if total_score > best_score:
-            st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
+            # st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
             best_score = total_score
             best_row = m
 
