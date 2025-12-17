@@ -28,32 +28,62 @@ http_options = types.HttpOptions(
 # Gemini Prompt
 # ----------------------------
 LLM_PROMPT = """
-You are an expert in extracting structured film inventory tables.
+You are an expert in extracting and normalizing structured film inventory tables.
 
-Given extracted vendor table text, return a JSON array with rows containing:
-- item: the product name or film type
-- vlt: VLT percentage (extract if available, else "")
+Given extracted vendor table text (from Excel, PDF, or image), return a JSON array.
+Each JSON object represents ONE row with the following fields:
+
+Required output fields:
+- item: full product / film name WITHOUT VLT number
+- series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
+- vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
 - width: width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
-- original_size_text: original size description
+- original_size_text: original size description exactly as shown in the source
 
-Normalize any size formats such as:
-- 40x100
-- 20x100
-- 36/24 inside parentheses
-- 60 (36/24)
-- 12, 20, 24, 36, 40 alone
-- X"XY' formats  
-Extract numeric values reliably.
+VLT extraction rules:
+1. If a VLT column exists, use it.
+2. If VLT is embedded in the item name or film series, extract it:
+   - Example: "i-Cool Carbon 02" → vlt = 2
+   - Example: "i-Cool Premium IR 15" → vlt = 15
+   - Remove the VLT number from the item name after extraction.
+3. Do NOT guess VLT if it is not explicitly present.
 
-Return ONLY a JSON array.
+Item / product rules:
+- "Film Series" or similar column represents the item/product name.
+- The item field should NOT include size, width, or VLT numbers.
+- Preserve original casing and wording as much as possible.
+
+Size normalization rules:
+- Normalize any of the following formats:
+  - 40x100, 20x100
+  - 36/24 inside parentheses
+  - 60 (36/24)
+  - 12, 20, 24, 36, 40 alone
+  - X" x Y', X"XY', or similar formats
+- Extract:
+  - width → inches (integer)
+  - length → feet (integer)
+- If length is missing, infer from context ONLY if clearly specified (e.g., standard 100 ft roll). Otherwise leave blank.
+
+Quantity rules:
+- qty represents number of rolls.
+- Extract numeric quantity only.
+
+Strict rules:
+- Return ONLY a valid JSON array.
+- Do NOT include explanations, markdown, or comments.
+- Do NOT invent data.
+- If a value cannot be confidently extracted, return "".
+
 Table text begins below:
 
 ----
 {data}
 ----
 """
+
 
 
 # ================================================
