@@ -362,7 +362,7 @@ if submitted:
                 if suffix.endswith(("png", "jpg", "jpeg")):
                     img = Image.open(uploaded)
                     result = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-2.1-flash",
                         contents=[img]
                     )
                     
@@ -379,7 +379,7 @@ if submitted:
             # STEP 2: Normalize table using LLM
             prompt = LLM_PROMPT.format(data=raw_data)
             out = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.1-flash",
                 contents=[prompt]
             )
             json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
