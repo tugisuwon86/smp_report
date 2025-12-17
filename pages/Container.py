@@ -309,7 +309,7 @@ def best_meta_match(row, meta_df):
         score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
         score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
         item_score = score1 + score2
-
+        st.write(item, m, item_score)
         total_score = width_score + item_score
 
         if total_score > best_score:
@@ -423,6 +423,8 @@ if submitted:
                 })
     
         df_final = pd.DataFrame(final_rows)
+        st.write('consolidated')
+        st.dataframe(df_final.head(20))
     
         # ============================================
         # 4. JOIN WITH META (by vlt)
