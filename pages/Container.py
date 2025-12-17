@@ -37,10 +37,20 @@ Required output fields:
 - item: full product / film name WITHOUT VLT number
 - series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
 - vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
-- width: width in inches (integer)
+- width: total width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
+- composition: list of integers representing an explicit width split (e.g., [36, 24]) IF AND ONLY IF explicitly provided in the source; otherwise null
 - original_size_text: original size description exactly as shown in the source
+
+Composition (combination) extraction rules:
+1. If the source explicitly provides a width split, extract it:
+   - Examples:
+     - "60 (36/24)" → composition = [36, 24]
+     - "36/24" → composition = [36, 24]
+2. The sum of composition values MUST equal the total width.
+3. If no explicit split is present, set composition = null.
+4. Do NOT derive, infer, or compute composition values.
 
 VLT extraction rules:
 1. If a VLT column exists, use it.
@@ -52,7 +62,7 @@ VLT extraction rules:
 
 Item / product rules:
 - "Film Series" or similar column represents the item/product name.
-- The item field should NOT include size, width, or VLT numbers.
+- The item field should NOT include size, width, length, or VLT numbers.
 - Preserve original casing and wording as much as possible.
 
 Size normalization rules:
@@ -75,7 +85,7 @@ Strict rules:
 - Return ONLY a valid JSON array.
 - Do NOT include explanations, markdown, or comments.
 - Do NOT invent data.
-- If a value cannot be confidently extracted, return "".
+- If a value cannot be confidently extracted, return null or "" as appropriate.
 
 Table text begins below:
 
@@ -83,8 +93,6 @@ Table text begins below:
 {data}
 ----
 """
-
-
 
 # ================================================
 # Load META file (meta.txt)
@@ -241,7 +249,35 @@ def consolidate_with_priority(available: Counter):
 # ================================================
 # CONSOLIDATE GROUPS BY ITEM + VLT
 # ================================================
+from collections import Counter
+import pandas as pd
+
 def consolidate_group(df):
+    """
+    Consolidate widths ONLY if composition is missing.
+    If composition exists, return rows as-is (normalized shape).
+    """
+
+    # ---------- NEW: short-circuit if composition exists ----------
+    if "composition" in df.columns:
+        has_composition = df["composition"].notna().any()
+    else:
+        has_composition = False
+
+    if has_composition:
+        # Just normalize rows → no consolidation
+        out = []
+        for _, r in df.iterrows():
+            out.append({
+                "width_final": r["width"],
+                "composition": r["composition"],
+                "qty": int(r["qty"]),
+                "length": r["length"]
+            })
+        return out
+    # --------------------------------------------------------------
+
+    # ---------- Existing logic (unchanged) ----------
     available = Counter()
     lengths = []
 
@@ -249,13 +285,12 @@ def consolidate_group(df):
         qty = int(r["qty"])
         width = r["width"]
         length = r["length"]
-        parts = r.get("parts")
+        parts = r.get("parts")  # backward compatibility
 
         if length:
             lengths.append(length)
 
         if parts:
-            # explode parts: each roll produces width-components
             for p in parts:
                 available[p] += qty
         else:
@@ -263,13 +298,13 @@ def consolidate_group(df):
 
     final = consolidate_with_priority(available)
 
-    # use majority length
     length_val = max(set(lengths), key=lengths.count) if lengths else None
 
     for r in final:
         r["length"] = length_val
 
     return final
+
 
 from rapidfuzz import fuzz
 
