@@ -342,6 +342,7 @@ uploaded_files = st.file_uploader(
 with st.form("Proceed"):
     submitted = st.form_submit_button("Submit")
 
+df_join = pd.DataFrame()
 if submitted:
     # ================================================
     # Load META file (meta.txt)
@@ -510,6 +511,5 @@ if submitted:
         st.subheader("Final Merged Table")
         st.dataframe(df_join, use_container_width=True)
 
-if df_join:
-    st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
+st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
 
