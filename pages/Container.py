@@ -6,31 +6,77 @@ from collections import Counter
 import itertools
 import json
 from google import genai
-st.write(genai.__file__)
+
+from google.genai import types 
+retry_options = types.HttpRetryOptions(
+    # The number of attempts to make before failing the request
+    attempts=3, 
+    # The initial delay (in seconds)
+    initial_delay=1.0, 
+    # The maximum delay (in seconds) between retries
+    max_delay=60.0
+)
+
+# 3. Create the HttpOptions object
+http_options = types.HttpOptions(
+    retry_options=retry_options
+)
+
+
+# st.write(genai.__file__)
 # ----------------------------
 # Gemini Prompt
 # ----------------------------
 LLM_PROMPT = """
-You are an expert in extracting structured film inventory tables.
+You are an expert in extracting and normalizing structured film inventory tables.
 
-Given extracted vendor table text, return a JSON array with rows containing:
-- item: the product name or film type
-- vlt: VLT percentage (extract if available, else "")
+Given extracted vendor table text (from Excel, PDF, or image), return a JSON array.
+Each JSON object represents ONE row with the following fields:
+
+Required output fields:
+- item: full product / film name WITHOUT VLT number
+- series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
+- vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
 - width: width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
-- original_size_text: original size description
+- original_size_text: original size description exactly as shown in the source
 
-Normalize any size formats such as:
-- 40x100
-- 20x100
-- 36/24 inside parentheses
-- 60 (36/24)
-- 12, 20, 24, 36, 40 alone
-- X"XY' formats  
-Extract numeric values reliably.
+VLT extraction rules:
+1. If a VLT column exists, use it.
+2. If VLT is embedded in the item name or film series, extract it:
+   - Example: "i-Cool Carbon 02" → vlt = 2
+   - Example: "i-Cool Premium IR 15" → vlt = 15
+   - Remove the VLT number from the item name after extraction.
+3. Do NOT guess VLT if it is not explicitly present.
 
-Return ONLY a JSON array.
+Item / product rules:
+- "Film Series" or similar column represents the item/product name.
+- The item field should NOT include size, width, or VLT numbers.
+- Preserve original casing and wording as much as possible.
+
+Size normalization rules:
+- Normalize any of the following formats:
+  - 40x100, 20x100
+  - 36/24 inside parentheses
+  - 60 (36/24)
+  - 12, 20, 24, 36, 40 alone
+  - X" x Y', X"XY', or similar formats
+- Extract:
+  - width → inches (integer)
+  - length → feet (integer)
+- If length is missing, infer from context ONLY if clearly specified (e.g., standard 100 ft roll). Otherwise leave blank.
+
+Quantity rules:
+- qty represents number of rolls.
+- Extract numeric quantity only.
+
+Strict rules:
+- Return ONLY a valid JSON array.
+- Do NOT include explanations, markdown, or comments.
+- Do NOT invent data.
+- If a value cannot be confidently extracted, return "".
+
 Table text begins below:
 
 ----
@@ -39,12 +85,13 @@ Table text begins below:
 """
 
 
+
 # ================================================
 # Load META file (meta.txt)
 # ================================================
 @st.cache_data
 def load_meta():
-    xlsx = pd.ExcelFile("CNT Product Description (1).xlsx")
+    xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
     dfs = {}
     
     for sheet in xlsx.sheet_names:
@@ -235,13 +282,13 @@ def extract_width_from_meta(desc):
 
 def best_meta_match(row, meta_df):
     item = str(row["item"])
-    vlt = str(row["vlt"]).strip()
+    vlt = int(str(row["vlt"]).strip().replace('%', ''))
     width_final = int(row["width"])
-
     # 1️⃣ Filter by matching VLT
-    candidates = meta_df[meta_df["vlt"] == vlt]
-    candidates["compare"] = candidates["Proforma_Invoice_Description"] + " " + candidates["Proforma_Invoice_Width"]
+    candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
+    candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     candidates = candidates[candidates["compare"].str.contains(str(width_final))]
+    # st.dataframe(candidates.head(2))
     if candidates.empty:
         return None
 
@@ -249,8 +296,7 @@ def best_meta_match(row, meta_df):
     best_row = None
 
     for _, m in candidates.iterrows():
-        meta_width = extract_width_from_meta(m["description"])
-
+        meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
         # 2️⃣ Width match (only when width_final < 60)
         if width_final < 60 and meta_width == width_final:
             width_score = 100
@@ -258,9 +304,10 @@ def best_meta_match(row, meta_df):
             width_score = 0
 
         # 3️⃣ Fuzzy match on item name
-        score1 = fuzz.token_set_ratio(item, m["description"])
-        score2 = fuzz.token_set_ratio(item, m["techpia_code"])
-        item_score = max(score1, score2)
+        # score1 = fuzz.token_set_ratio(item, m["description"])
+        score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
+        score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
+        item_score = score1 + score2
 
         total_score = width_score + item_score
 
@@ -275,9 +322,13 @@ def best_meta_match(row, meta_df):
 # ----------------------------
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
-client = genai.Client(api_key=st.secrets['gemini-api']['api_token'])    
+client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], http_options=http_options)    
 # models = client.models.list()
-# st.write([m.name for m in models])
+# option = "Proforma"
+option_company = st.selectbox(
+    "Company Name: ",
+    ("GEOSHIELD", "HITEK", "Others")
+)
 option = st.selectbox(
     "Proforma vs Purchase Order",
     ("Proforma", "Purchase Order")
@@ -286,134 +337,140 @@ uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
 )
-all_rows = []
-if uploaded:
-    for uploaded in uploaded_files:
-        suffix = uploaded.name.lower()
-    
-        # STEP 1: extract data from the input file
-        if suffix.endswith(("xlsx", "xls")):
-            df = pd.read_excel(uploaded)
-            raw_data = df.to_csv(index=False)
-        elif suffix.endswith(".msg"):
-            text, attachments = extract_text_from_msg(uploaded)
+with st.form("Proceed"):
+    submitted = st.form_submit_button("Submit")
+
+if submitted:
+    all_rows = []
+    if uploaded_files:
+        for uploaded in uploaded_files:
+            suffix = uploaded.name.lower()
         
-            raw_data = text
-        else:
-            # Image or PDF → use Gemini Vision
-            from PIL import Image
-            import fitz
-            if suffix.endswith(("png", "jpg", "jpeg")):
-                img = Image.open(uploaded)
-                result = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[img]
-                )
-                
-                raw_data = result.text
-            elif suffix.endswith("pdf"):
-                pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
-                text = ""
-                for p in pdf:
-                    text += p.get_text()
+            # STEP 1: extract data from the input file
+            if suffix.endswith(("xlsx", "xls")):
+                df = pd.read_excel(uploaded)
+                raw_data = df.to_csv(index=False)
+            elif suffix.endswith(".msg"):
+                text, attachments = extract_text_from_msg(uploaded)
+            
                 raw_data = text
             else:
-                st.error("Unsupported file")
+                # Image or PDF → use Gemini Vision
+                from PIL import Image
+                import fitz
+                if suffix.endswith(("png", "jpg", "jpeg")):
+                    img = Image.open(uploaded)
+                    result = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[img]
+                    )
+                    
+                    raw_data = result.text
+                elif suffix.endswith("pdf"):
+                    pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
+                    text = ""
+                    for p in pdf:
+                        text += p.get_text()
+                    raw_data = text
+                else:
+                    st.error("Unsupported file")
+        
+            # STEP 2: Normalize table using LLM
+            prompt = LLM_PROMPT.format(data=raw_data)
+            out = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[prompt]
+            )
+            json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
+            rows = json.loads(json_text)
     
-        # STEP 2: Normalize table using LLM
-        prompt = LLM_PROMPT.format(data=raw_data)
-        out = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[prompt]
-        )
-        json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
-        rows = json.loads(json_text)
-
-        all_rows += rows
-
-    df_norm = pd.DataFrame(rows)
-    df_norm["item"] = df_norm["item"].ffill()
-    st.dataframe(df_norm.head(30))
-
-    # STEP 3: parse size fields properly
-    widths = []
-    lengths = []
-    parts = []
-
-    for t in df_norm["original_size_text"]:
-        w, l, p = parse_size(t)
-        widths.append(w)
-        lengths.append(l)
-        parts.append(p)
-
-    df_norm["width"] = widths
-    df_norm["length"] = lengths
-    df_norm["parts"] = parts
-
-    # STEP 4: consolidate width sum to 60
-    final_rows = []
-
-    for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
-        out = consolidate_group(group)
-        for r in out:
-            final_rows.append({
-                "item": item,
-                "vlt": vlt,
-                "composition": r["composition"],
-                "width": r["width_final"],
+            all_rows += rows
+    
+        df_norm = pd.DataFrame(all_rows)
+        df_norm["item"] = df_norm["item"].ffill()
+        st.write("Extracted information")
+        st.dataframe(df_norm.head(30))
+    
+        # STEP 3: parse size fields properly
+        widths = []
+        lengths = []
+        parts = []
+    
+        for t in df_norm["original_size_text"]:
+            w, l, p = parse_size(t)
+            widths.append(w)
+            lengths.append(l)
+            parts.append(p)
+    
+        df_norm["width"] = widths
+        df_norm["length"] = lengths
+        df_norm["parts"] = parts
+    
+        # STEP 4: consolidate width sum to 60
+        final_rows = []
+    
+        for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
+            out = consolidate_group(group)
+            for r in out:
+                final_rows.append({
+                    "item": item,
+                    "vlt": vlt,
+                    "composition": r["composition"],
+                    "width": r["width_final"],
+                    "length": r["length"],
+                    "qty": r["qty"]
+                })
+    
+        df_final = pd.DataFrame(final_rows)
+    
+        # ============================================
+        # 4. JOIN WITH META (by vlt)
+        # ============================================
+        matched_rows = []
+    
+        for _, r in df_final.iterrows():
+            meta_match = best_meta_match(r, meta_df)
+        
+            if meta_match is not None:
+                if option == "Proforma":
+                    type_code = meta_match["Proforma_Invoice_Type_Code"]
+                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                    description = meta_match["Proforma_Invoice_Description"]
+                    unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
+                elif option == "Purchase Order":
+                    type_code = meta_match["Purchase_Order_Type_Code"]
+                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                    description = meta_match["Purchase_Order_Description"]
+                    unit_price = float(meta_match["Purchase_Order_Unit_Price"])
+            else:
+                type_code = ""
+                techpia_code = ""
+                description = ""
+                unit_price = 0
+        
+            amount = unit_price * r["qty"]
+        
+            matched_rows.append({
+                "type_code": type_code,
+                "techpia_code": techpia_code,
+                "description": description,
+                "vlt": r["vlt"],
+                "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
                 "length": r["length"],
-                "qty": r["qty"]
+                "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
+                "quantity": r["qty"],
+                "unit_price": f"${unit_price:,.2f}",
+                "amount": f"${amount:,.2f}",
             })
+        
+        df_join = pd.DataFrame(matched_rows)
 
-    df_final = pd.DataFrame(final_rows)
-
-    # ============================================
-    # 4. JOIN WITH META (by vlt)
-    # ============================================
-    matched_rows = []
-
-    for _, r in df_final.iterrows():
-        meta_match = best_meta_match(r, meta_df)
+        df_join = df_join.sort_values("type_code")
+        # Final column order
+        # df_join = df_join[["techpia_code", "type_code", "description", "vlt", "width", "length", "thickness", "qty", "unit_price", "amount", "source_file", "composition", "item"]]
     
-        if meta_match is not None:
-            if option == 'Proforma":
-                type_code = meta_match["Proforma_Invoice_Type_Code"]
-                techpia_code = meta_match["techpia_code"]
-                description = meta_match["Proforma_Invoice_Description"]
-                unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-            elif:
-                type_code = meta_match["Purchase_Order_Type_Code"]
-                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                description = meta_match["Purchase_Order_Description"]
-                unit_price = float(meta_match["Purchase_Order_Unit_Price"])
-        else:
-            type_code = ""
-            techpia_code = ""
-            description = ""
-            unit_price = 0
-    
-        amount = unit_price * r["qty"]
-    
-        matched_rows.append({
-            "type_code": type_code,
-            "techpia_code": techpia_code,
-            "description": description,
-            "vlt": r["vlt"],
-            "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else "",
-            "length": r["length"],
-            "thickness": "1.5",
-            "quantity": r["qty"],
-            "unit_price": f"${unit_price:,.2f}",
-            "amount": f"${amount:,.2f}",
-        })
-    
-    df_join = pd.DataFrame(matched_rows)
+        st.subheader("Final Merged Table")
+        st.dataframe(df_join, use_container_width=True)
 
-    # Final column order
-    # df_join = df_join[["techpia_code", "type_code", "description", "vlt", "width", "length", "thickness", "qty", "unit_price", "amount", "source_file", "composition", "item"]]
-
-    st.subheader("Final Merged Table")
-    st.dataframe(df_join, use_container_width=True)
-
-    st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
+st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
 
