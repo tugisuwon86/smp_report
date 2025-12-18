@@ -294,34 +294,36 @@ def best_meta_match(row, meta_df):
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
     candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
-    st.dataframe(candidates.head(30))
-    candidates = candidates[candidates["compare"].str.contains(str(width_final))]
-    # st.dataframe(candidates.head(2))
-    if candidates.empty:
-        return None
-
-    best_score = -1
-    best_row = None
-
-    for _, m in candidates.iterrows():
-        meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
-        # 2️⃣ Width match (only when width_final < 60)
-        if width_final < 60 and meta_width == width_final:
-            width_score = 100
-        else:
-            width_score = 0
-
-        # 3️⃣ Fuzzy match on item name
-        # score1 = fuzz.token_set_ratio(item, m["description"])
-        score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
-        score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
-        item_score = score1 + score2
-        total_score = width_score + item_score
-
-        if total_score > best_score:
-            # st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
-            best_score = total_score
-            best_row = m
+    try:
+        candidates = candidates[candidates["compare"].str.contains(str(width_final))]
+        # st.dataframe(candidates.head(2))
+        if candidates.empty:
+            return None
+    
+        best_score = -1
+        best_row = None
+    
+        for _, m in candidates.iterrows():
+            meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
+            # 2️⃣ Width match (only when width_final < 60)
+            if width_final < 60 and meta_width == width_final:
+                width_score = 100
+            else:
+                width_score = 0
+    
+            # 3️⃣ Fuzzy match on item name
+            # score1 = fuzz.token_set_ratio(item, m["description"])
+            score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
+            score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
+            item_score = score1 + score2
+            total_score = width_score + item_score
+    
+            if total_score > best_score:
+                # st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
+                best_score = total_score
+                best_row = m
+    except:
+        best_row = None
 
     return best_row
     
