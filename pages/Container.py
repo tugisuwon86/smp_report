@@ -234,6 +234,8 @@ def consolidate_group(df):
         # Just normalize rows → no consolidation
         out = []
         for _, r in df.iterrows():
+            if pd.isna(r["qty"]) or r["qty"] == "" or str(r["qty"]) == "NaN":
+                r["qty"] = 0
             out.append({
                 "width_final": r["width"],
                 "composition": "/".join([str(x) for x in r["composition"]]) if r["composition"] is not None else "",
