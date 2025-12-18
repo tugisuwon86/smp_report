@@ -388,7 +388,8 @@ if submitted:
                 df = pd.read_excel(uploaded)
                 selected_qty_col = st.multiselect(
                     "Select columns to process",
-                    options=list(df.columns)
+                    options=list(df.columns),
+                    default=list(df.columns)[:3]
                 )
                 
                 raw_data = df.to_csv(index=False)
