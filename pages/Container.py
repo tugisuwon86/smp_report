@@ -468,7 +468,7 @@ if submitted:
     
         df_final = pd.DataFrame(final_rows)
         st.write('consolidated')
-        st.dataframe(df_final.head(20))
+        st.dataframe(df_final.head(100))
     
         # ============================================
         # 4. JOIN WITH META (by vlt)
