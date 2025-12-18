@@ -386,12 +386,6 @@ if submitted:
             # STEP 1: extract data from the input file
             if suffix.endswith(("xlsx", "xls")):
                 df = pd.read_excel(uploaded)
-                selected_qty_col = st.multiselect(
-                    "Select columns to process",
-                    options=list(df.columns),
-                    default=list(df.columns)[:3]
-                )
-                
                 raw_data = df.to_csv(index=False)
             elif suffix.endswith(".msg"):
                 text, attachments = extract_text_from_msg(uploaded)
