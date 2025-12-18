@@ -237,7 +237,7 @@ def consolidate_group(df):
             out.append({
                 "width_final": r["width"],
                 "composition": "/".join([str(x) for x in r["composition"]]) if r["composition"] is not None else "",
-                "qty": int(r["qty"]) if r["qty"] is not None or r["qty"] != "" else 0,
+                "qty": int(r["qty"]) if r["qty"] is not None and r["qty"] != "" and str(r["qty"]) != "NaN" else 0,
                 "length": r["length"]
             })
         return out
