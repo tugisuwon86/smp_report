@@ -286,7 +286,10 @@ def extract_width_from_meta(desc):
 
 def best_meta_match(row, meta_df):
     item = str(row["item"])
-    vlt = int(str(row["vlt"]).strip().replace('%', ''))
+    try:
+        vlt = int(str(row["vlt"]).strip().replace('%', ''))
+    except:
+        vlt = 0
     width_final = int(row["width"])
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
