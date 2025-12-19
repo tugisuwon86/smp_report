@@ -341,10 +341,10 @@ option_company = st.selectbox(
     "Company Name: ",
     ("GEOSHIELD", "Hitek", "UVIRON")
 )
-option = st.selectbox(
-    "Proforma vs Purchase Order",
-    ("Proforma", "Purchase Order")
-)
+# option = st.selectbox(
+#     "Proforma vs Purchase Order",
+#     ("Proforma", "Purchase Order")
+# )
 uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
@@ -481,23 +481,20 @@ if submitted:
             meta_match = best_meta_match(r, meta_df)
         
             if meta_match is not None:
-                if option == "Proforma":
-                    type_code = meta_match["Proforma_Invoice_Type_Code"]
-                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                    description = meta_match["Proforma_Invoice_Description"]
-                    unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-                elif option == "Purchase Order":
-                    type_code = meta_match["Purchase_Order_Type_Code"]
-                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                    description = meta_match["Purchase_Order_Description"]
-                    unit_price = float(meta_match["Purchase_Order_Unit_Price"])
+                type_code = meta_match["Proforma_Invoice_Type_Code"]
+                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                description = meta_match["Proforma_Invoice_Description"]
+                pi_unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
+                po_unit_price = float(meta_match["Purchase_Order_Unit_Price"])
             else:
                 type_code = ""
                 techpia_code = ""
                 description = ""
-                unit_price = 0
+                pi_unit_price = 0
+                po_unit_price = 0
         
-            amount = unit_price * r["qty"]
+            pi_amount = pi_unit_price * r["qty"]
+            po_amount = po_unit_price * r["qty"]
         
             matched_rows.append({
                 "type_code": type_code,
@@ -508,8 +505,10 @@ if submitted:
                 "length": r["length"],
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
                 "quantity": r["qty"],
-                "unit_price": f"${unit_price:,.2f}",
-                "amount": f"${amount:,.2f}",
+                "pi_unit_price": f"${pi_unit_price:,.2f}",
+                "po_unit_price": f"${po_unit_price:,.2f}",
+                "pi_amount": f"${pi_amount:,.2f}",
+                "po_amount": f"${po_amount:,.2f}",
             })
         
         df_join = pd.DataFrame(matched_rows)
