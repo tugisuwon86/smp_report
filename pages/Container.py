@@ -287,12 +287,14 @@ def extract_width_from_meta(desc):
 def best_meta_match(row, meta_df):
     item = str(row["item"])
     try:
-        vlt = int(str(row["vlt"]).strip().replace('%', ''))
+        vlt = float(str(row["vlt"]).strip().replace('%', ''))
     except:
         vlt = 0
     width_final = int(row["width"])
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
+    if candidates.shape[0] == 0:
+        candidates = meta_df.copy()
     candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     try:
         candidates = candidates[candidates["compare"].str.contains(str(width_final))]
@@ -313,8 +315,8 @@ def best_meta_match(row, meta_df):
     
             # 3️⃣ Fuzzy match on item name
             # score1 = fuzz.token_set_ratio(item, m["description"])
-            score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
-            score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
+            score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["Purchase_Order_Description"])))
+            score2 = max(fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"]), fuzz.token_set_ratio(item, m["Purchase_Order_Description"]))
             item_score = score1 + score2
             total_score = width_score + item_score
     
