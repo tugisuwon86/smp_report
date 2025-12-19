@@ -37,10 +37,20 @@ Required output fields:
 - item: full product / film name WITHOUT VLT number
 - series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
 - vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
-- width: width in inches (integer)
+- width: total width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
+- composition: list of integers representing an explicit width split (e.g., [36, 24]) IF AND ONLY IF explicitly provided in the source; otherwise null
 - original_size_text: original size description exactly as shown in the source
+
+Composition (combination) extraction rules:
+1. If the source explicitly provides a width split, extract it:
+   - Examples:
+     - "60 (36/24)" → composition = [36, 24]
+     - "36/24" → composition = [36, 24]
+2. The sum of composition values MUST equal the total width.
+3. If no explicit split is present, set composition = null.
+4. Do NOT derive, infer, or compute composition values.
 
 VLT extraction rules:
 1. If a VLT column exists, use it.
@@ -52,7 +62,7 @@ VLT extraction rules:
 
 Item / product rules:
 - "Film Series" or similar column represents the item/product name.
-- The item field should NOT include size, width, or VLT numbers.
+- The item field should NOT include size, width, length, or VLT numbers.
 - Preserve original casing and wording as much as possible.
 
 Size normalization rules:
@@ -75,7 +85,7 @@ Strict rules:
 - Return ONLY a valid JSON array.
 - Do NOT include explanations, markdown, or comments.
 - Do NOT invent data.
-- If a value cannot be confidently extracted, return "".
+- If a value cannot be confidently extracted, return null or "" as appropriate.
 
 Table text begins below:
 
@@ -84,41 +94,6 @@ Table text begins below:
 ----
 """
 
-
-
-# ================================================
-# Load META file (meta.txt)
-# ================================================
-@st.cache_data
-def load_meta():
-    xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
-    dfs = {}
-    
-    for sheet in xlsx.sheet_names:
-        df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
-    
-        # flatten multi-level columns
-        df.columns = [
-            f"{h1.strip()}_{h2.strip()}"
-            for h1, h2 in df.columns
-        ]
-    
-        # optional clean
-        df.columns = (
-            df.columns.str.replace(" ", "_")
-                      .str.replace("(", "")
-                      .str.replace(")", "")
-        )
-    
-        dfs[sheet] = df
-    df_all = pd.concat(dfs.values(), ignore_index=True)
-    # df = pd.read_csv("pages/meta.txt", sep="|")
-    # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
-    # # Extract VLT value from Techpia code like “MEGAMAX 20”
-    # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
-    # df["vlt"] = df["vlt"].astype(str)
-    return df_all
-meta_df = load_meta()
 
 import extract_msg
 
@@ -240,7 +215,37 @@ def consolidate_with_priority(available: Counter):
 # ================================================
 # CONSOLIDATE GROUPS BY ITEM + VLT
 # ================================================
+from collections import Counter
+import pandas as pd
+
 def consolidate_group(df):
+    """
+    Consolidate widths ONLY if composition is missing.
+    If composition exists, return rows as-is (normalized shape).
+    """
+
+    # ---------- NEW: short-circuit if composition exists ----------
+    if "composition" in df.columns:
+        has_composition = df["composition"].notna().any()
+    else:
+        has_composition = False
+
+    if has_composition:
+        # Just normalize rows → no consolidation
+        out = []
+        for _, r in df.iterrows():
+            if pd.isna(r["qty"]) or r["qty"] == "" or str(r["qty"]) == "NaN":
+                r["qty"] = 0
+            out.append({
+                "width_final": r["width"],
+                "composition": "/".join([str(x) for x in r["composition"]]) if r["composition"] is not None else "",
+                "qty": int(r["qty"]) if r["qty"] is not None and r["qty"] != "" and str(r["qty"]) != "NaN" else 0,
+                "length": r["length"]
+            })
+        return out
+    # --------------------------------------------------------------
+
+    # ---------- Existing logic (unchanged) ----------
     available = Counter()
     lengths = []
 
@@ -248,13 +253,12 @@ def consolidate_group(df):
         qty = int(r["qty"])
         width = r["width"]
         length = r["length"]
-        parts = r.get("parts")
+        parts = r.get("parts")  # backward compatibility
 
         if length:
             lengths.append(length)
 
         if parts:
-            # explode parts: each roll produces width-components
             for p in parts:
                 available[p] += qty
         else:
@@ -262,13 +266,13 @@ def consolidate_group(df):
 
     final = consolidate_with_priority(available)
 
-    # use majority length
     length_val = max(set(lengths), key=lengths.count) if lengths else None
 
     for r in final:
         r["length"] = length_val
 
     return final
+
 
 from rapidfuzz import fuzz
 
@@ -282,38 +286,46 @@ def extract_width_from_meta(desc):
 
 def best_meta_match(row, meta_df):
     item = str(row["item"])
-    vlt = int(str(row["vlt"]).strip().replace('%', ''))
+    try:
+        vlt = float(str(row["vlt"]).strip().replace('%', ''))
+    except:
+        vlt = 0
     width_final = int(row["width"])
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
+    if candidates.shape[0] == 0:
+        candidates = meta_df.copy()
     candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
-    candidates = candidates[candidates["compare"].str.contains(str(width_final))]
-    # st.dataframe(candidates.head(2))
-    if candidates.empty:
-        return None
-
-    best_score = -1
-    best_row = None
-
-    for _, m in candidates.iterrows():
-        meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
-        # 2️⃣ Width match (only when width_final < 60)
-        if width_final < 60 and meta_width == width_final:
-            width_score = 100
-        else:
-            width_score = 0
-
-        # 3️⃣ Fuzzy match on item name
-        # score1 = fuzz.token_set_ratio(item, m["description"])
-        score1 = fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"]))
-        score2 = fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"])
-        item_score = score1 + score2
-
-        total_score = width_score + item_score
-
-        if total_score > best_score:
-            best_score = total_score
-            best_row = m
+    try:
+        candidates = candidates[candidates["compare"].str.contains(str(width_final))]
+        # st.dataframe(candidates.head(2))
+        if candidates.empty:
+            return None
+    
+        best_score = -1
+        best_row = None
+    
+        for _, m in candidates.iterrows():
+            meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
+            # 2️⃣ Width match (only when width_final < 60)
+            if width_final < 60 and meta_width == width_final:
+                width_score = 100
+            else:
+                width_score = 0
+    
+            # 3️⃣ Fuzzy match on item name
+            # score1 = fuzz.token_set_ratio(item, m["description"])
+            score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["Purchase_Order_Description"])))
+            score2 = max(fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"]), fuzz.token_set_ratio(item, m["Purchase_Order_Description"]))
+            item_score = score1 + score2
+            total_score = width_score + item_score
+    
+            if total_score > best_score:
+                # st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
+                best_score = total_score
+                best_row = m
+    except:
+        best_row = None
 
     return best_row
     
@@ -323,16 +335,16 @@ def best_meta_match(row, meta_df):
 
 st.title("Film Roll Width Consolidation (Simplified Version)")
 client = genai.Client(api_key=st.secrets['gemini-api']['api_token'], http_options=http_options)    
-# models = client.models.list()
+models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
     "Company Name: ",
-    ("GEOSHIELD", "HITEK", "Others")
+    ("GEOSHIELD", "Hitek", "UVIRON")
 )
-option = st.selectbox(
-    "Proforma vs Purchase Order",
-    ("Proforma", "Purchase Order")
-)
+# option = st.selectbox(
+#     "Proforma vs Purchase Order",
+#     ("Proforma", "Purchase Order")
+# )
 uploaded_files = st.file_uploader(
     "Upload one file to analyze (Excel, Image, PDF)",
     accept_multiple_files = True
@@ -340,7 +352,42 @@ uploaded_files = st.file_uploader(
 with st.form("Proceed"):
     submitted = st.form_submit_button("Submit")
 
+df_join = pd.DataFrame()
 if submitted:
+    # ================================================
+    # Load META file (meta.txt)
+    # ================================================
+    @st.cache_data
+    def load_meta(option_company):
+        xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
+        dfs = {}
+        
+        for sheet in xlsx.sheet_names:
+            if sheet == option_company:
+                df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
+            
+                # flatten multi-level columns
+                df.columns = [
+                    f"{h1.strip()}_{h2.strip()}"
+                    for h1, h2 in df.columns
+                ]
+            
+                # optional clean
+                df.columns = (
+                    df.columns.str.replace(" ", "_")
+                              .str.replace("(", "")
+                              .str.replace(")", "")
+                )
+                dfs[sheet] = df
+        df_all = pd.concat(dfs.values(), ignore_index=True)
+        # df = pd.read_csv("pages/meta.txt", sep="|")
+        # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
+        # # Extract VLT value from Techpia code like “MEGAMAX 20”
+        # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
+        # df["vlt"] = df["vlt"].astype(str)
+        return df_all
+    meta_df = load_meta(option_company)
+    
     all_rows = []
     if uploaded_files:
         for uploaded in uploaded_files:
@@ -422,6 +469,8 @@ if submitted:
                 })
     
         df_final = pd.DataFrame(final_rows)
+        st.write('consolidated')
+        st.dataframe(df_final.head(100))
     
         # ============================================
         # 4. JOIN WITH META (by vlt)
@@ -432,23 +481,20 @@ if submitted:
             meta_match = best_meta_match(r, meta_df)
         
             if meta_match is not None:
-                if option == "Proforma":
-                    type_code = meta_match["Proforma_Invoice_Type_Code"]
-                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                    description = meta_match["Proforma_Invoice_Description"]
-                    unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-                elif option == "Purchase Order":
-                    type_code = meta_match["Purchase_Order_Type_Code"]
-                    techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                    description = meta_match["Purchase_Order_Description"]
-                    unit_price = float(meta_match["Purchase_Order_Unit_Price"])
+                type_code = meta_match["Proforma_Invoice_Type_Code"]
+                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
+                description = meta_match["Proforma_Invoice_Description"]
+                pi_unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
+                po_unit_price = float(meta_match["Purchase_Order_Unit_Price"])
             else:
                 type_code = ""
                 techpia_code = ""
                 description = ""
-                unit_price = 0
+                pi_unit_price = 0
+                po_unit_price = 0
         
-            amount = unit_price * r["qty"]
+            pi_amount = pi_unit_price * r["qty"]
+            po_amount = po_unit_price * r["qty"]
         
             matched_rows.append({
                 "type_code": type_code,
@@ -459,8 +505,10 @@ if submitted:
                 "length": r["length"],
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
                 "quantity": r["qty"],
-                "unit_price": f"${unit_price:,.2f}",
-                "amount": f"${amount:,.2f}",
+                "pi_unit_price": f"{pi_unit_price:,.2f}",
+                "po_unit_price": f"{po_unit_price:,.2f}",
+                "pi_amount": f"{pi_amount:,.2f}",
+                "po_amount": f"{po_amount:,.2f}",
             })
         
         df_join = pd.DataFrame(matched_rows)
