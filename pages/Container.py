@@ -483,7 +483,7 @@ if submitted:
             if meta_match is not None:
                 type_code = meta_match["Proforma_Invoice_Type_Code"]
                 techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                description = meta_match["Proforma_Invoice_Description"]
+                description = meta_match["Purchase_Order_Description"]
                 pi_unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
                 po_unit_price = float(meta_match["Purchase_Order_Unit_Price"])
             else:
