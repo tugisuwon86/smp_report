@@ -505,10 +505,10 @@ if submitted:
                 "length": r["length"],
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
                 "quantity": r["qty"],
-                "pi_unit_price": f"${pi_unit_price:,.2f}",
-                "po_unit_price": f"${po_unit_price:,.2f}",
-                "pi_amount": f"${pi_amount:,.2f}",
-                "po_amount": f"${po_amount:,.2f}",
+                "pi_unit_price": f"{pi_unit_price:,.2f}",
+                "po_unit_price": f"{po_unit_price:,.2f}",
+                "pi_amount": f"{pi_amount:,.2f}",
+                "po_amount": f"{po_amount:,.2f}",
             })
         
         df_join = pd.DataFrame(matched_rows)
