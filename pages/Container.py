@@ -292,10 +292,10 @@ def best_meta_match(row, meta_df):
         vlt = 0
     width_final = int(row["width"])
     # 1️⃣ Filter by matching VLT
-    candidates = meta_df[meta_df["Proforma_Invoice_VLT"] == vlt]
+    candidates = meta_df[meta_df["VLT"] == vlt]
     if candidates.shape[0] == 0:
         candidates = meta_df.copy()
-    candidates["compare"] = candidates[["Proforma_Invoice_Description", "Proforma_Invoice_Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
+    candidates["compare"] = candidates[["Description", "Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     try:
         candidates = candidates[candidates["compare"].str.contains(str(width_final))]
         # st.dataframe(candidates.head(2))
@@ -306,7 +306,7 @@ def best_meta_match(row, meta_df):
         best_row = None
     
         for _, m in candidates.iterrows():
-            meta_width = extract_width_from_meta(m["Purchase_Order_Description"])
+            meta_width = extract_width_from_meta(m["Description"])
             # 2️⃣ Width match (only when width_final < 60)
             if width_final < 60 and meta_width == width_final:
                 width_score = 100
@@ -315,8 +315,8 @@ def best_meta_match(row, meta_df):
     
             # 3️⃣ Fuzzy match on item name
             # score1 = fuzz.token_set_ratio(item, m["description"])
-            score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Proforma_Invoice_Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["Purchase_Order_Description"])))
-            score2 = max(fuzz.token_set_ratio(item, m["Proforma_Invoice_Description"]), fuzz.token_set_ratio(item, m["Purchase_Order_Description"]))
+            score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["Description"])))
+            score2 = max(fuzz.token_set_ratio(item, m["Description"]), fuzz.token_set_ratio(item, m["Description"]))
             item_score = score1 + score2
             total_score = width_score + item_score
     
@@ -359,33 +359,14 @@ if submitted:
     # ================================================
     @st.cache_data
     def load_meta(option_company):
-        xlsx = pd.ExcelFile("pages/CNT Product Description (1).xlsx")
-        dfs = {}
-        
-        for sheet in xlsx.sheet_names:
-            if sheet == option_company:
-                df = pd.read_excel(xlsx, sheet_name=sheet, header=[0, 1])
-            
+        df = pd.read_excel("pages/CNT Data.xlsx", sheet_name="Sheet1", header=[0, 1])
+        columns = list(df.columns[:8]) + [x for x in df.columns[8:] if option_company in x]
+        column_names = [x[0] for x in df.columns[:8]] + [x[1] for x in df.columns[8:] if option_company in x]
                 # flatten multi-level columns
-                df.columns = [
-                    f"{h1.strip()}_{h2.strip()}"
-                    for h1, h2 in df.columns
-                ]
-            
-                # optional clean
-                df.columns = (
-                    df.columns.str.replace(" ", "_")
-                              .str.replace("(", "")
-                              .str.replace(")", "")
-                )
-                dfs[sheet] = df
-        df_all = pd.concat(dfs.values(), ignore_index=True)
-        # df = pd.read_csv("pages/meta.txt", sep="|")
-        # df.columns = ["type_code", "techpia_code", "description", "unit_price"]
-        # # Extract VLT value from Techpia code like “MEGAMAX 20”
-        # df["vlt"] = df["techpia_code"].str.extract(r"(\d+)")
-        # df["vlt"] = df["vlt"].astype(str)
+        df_all = df[columns]
+        df_all.columns = column_names
         return df_all
+
     meta_df = load_meta(option_company)
     
     all_rows = []
@@ -481,11 +462,11 @@ if submitted:
             meta_match = best_meta_match(r, meta_df)
         
             if meta_match is not None:
-                type_code = meta_match["Proforma_Invoice_Type_Code"]
-                techpia_code = meta_match["Purchase_Order_Techpia_Code"]
-                description = meta_match["Proforma_Invoice_Description"]
-                pi_unit_price = float(meta_match["Proforma_Invoice_Unit_Price"])
-                po_unit_price = float(meta_match["Purchase_Order_Unit_Price"])
+                type_code = meta_match["Type (Code)"]
+                techpia_code = meta_match["Techpia (Code)"]
+                description = meta_match["Description"]
+                pi_unit_price = float(meta_match["Price"])
+                po_unit_price = float(meta_match["PO Price"])
             else:
                 type_code = ""
                 techpia_code = ""
