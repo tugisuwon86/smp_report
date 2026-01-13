@@ -330,7 +330,7 @@ def best_meta_match(row, meta_df, option_company):
     best_row = None
 
     for _, m in candidates.iterrows():
-        if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]):
+        if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             row["composition"] = 'nan'
         st.write("description value: ", m["QB Description"], item)
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
