@@ -308,6 +308,7 @@ def best_meta_match(row, meta_df):
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]):
             row["composition"] = 'nan'
+        st.write("description value: ", m["Description"].values)
         if any([x.lower() in m["Description"].lower() for x in item.split()]):
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and '/' in str(m["Width"])):
                 meta_width = extract_width_from_meta(m["Description"])
@@ -367,7 +368,7 @@ if submitted:
                 # flatten multi-level columns
         df_all = df[columns]
         df_all.columns = column_names
-        return df_all
+        return df_all.dropna(subset=['Description'])
 
     meta_df = load_meta(option_company)
     st.write("Loading metadata completed...")
