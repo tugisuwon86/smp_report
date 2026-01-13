@@ -298,7 +298,12 @@ def best_meta_match(row, meta_df, option_company):
         vlt = float(str(row["vlt"]).strip().replace('%', ''))
     except:
         vlt = 0
-    width_final = int(row["width"])
+    try:
+        width_final = int(row["width"])
+    except:
+        # ppf ase
+        width_final = 'PPF'
+        item += ' PPF'
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
     if candidates.shape[0] == 0:
@@ -323,7 +328,9 @@ def best_meta_match(row, meta_df, option_company):
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and '/' in str(m["Width"])):
                 meta_width = extract_width_from_meta(m["Description"])
                 # 2️⃣ Width match (only when width_final < 60)
-                if width_final < 60 and meta_width == width_final:
+                if width_final == 'PPF' and width_final in m["Description"]:
+                    width_score = 100
+                elif width_final < 60 and meta_width == width_final:
                     width_score = 100
                 else:
                     width_score = 0
@@ -335,9 +342,9 @@ def best_meta_match(row, meta_df, option_company):
                 score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score * multiplier
-                # st.write(width_score, item_score, total_score)
+                st.write(width_score, item_score, total_score)
             if total_score > best_score:
-                # st.write(item, m["Width"], m["Description"], total_score)
+                st.write(item, m["Width"], m["Description"], total_score)
                 best_score = total_score
                 best_row = m
 
