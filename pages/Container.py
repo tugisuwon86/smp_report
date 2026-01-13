@@ -297,13 +297,15 @@ def best_meta_match(row, meta_df, option_company):
     try:
         vlt = float(str(row["vlt"]).strip().replace('%', ''))
     except:
-        vlt = 0
-    try:
-        width_final = int(row["width"])
-    except:
-        # ppf ase
-        width_final = 'PPF'
-        item += ' PPF'
+        if option_company == 'Geoshield':
+            vlt = 'PPF'
+            item += ' PPF'
+        else:
+            vlt = 0
+    if option_company == 'Geoshield' and vlt == 75:
+        vlt = 70 # just for geoshield
+    width_final = int(row["width"])
+
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
     if candidates.shape[0] == 0:
@@ -342,7 +344,7 @@ def best_meta_match(row, meta_df, option_company):
                 score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score * multiplier
-                st.write(width_score, item_score, total_score)
+                # st.write(width_score, item_score, total_score)
             if total_score > best_score:
                 st.write(item, m["Width"], m["Description"], total_score)
                 best_score = total_score
@@ -439,6 +441,7 @@ if submitted:
     
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
+        df_norm['width'] = df_norm['width'].fillna(method='ffill')
         st.write("Extracted information")
         st.dataframe(df_norm.head(100))
     
