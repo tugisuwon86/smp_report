@@ -307,6 +307,11 @@ def best_meta_match(row, meta_df, option_company):
     width_final = int(row["width"])
 
     # if width = 12 
+    factor = 1
+    if width_final == 12:
+        row["composition"] = "5*12"
+        width_final = 60
+        factor = 5
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
@@ -352,7 +357,7 @@ def best_meta_match(row, meta_df, option_company):
                 best_score = total_score
                 best_row = m
 
-    return best_row
+    return best_row, factor
     
 # ----------------------------
 # Streamlit UI
@@ -446,7 +451,7 @@ if submitted:
         df_norm['width'] = df_norm['width'].fillna(method='ffill')
         st.write("Extracted information")
         st.dataframe(df_norm.head(200))
-        st.write(a)
+
         # STEP 3: parse size fields properly
         widths = []
         lengths = []
@@ -489,7 +494,7 @@ if submitted:
         matched_rows = []
     
         for _, r in df_final.iterrows():
-            meta_match = best_meta_match(r, meta_df, option_company)
+            meta_match, factor = best_meta_match(r, meta_df, option_company)
         
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
@@ -505,7 +510,10 @@ if submitted:
                 pi_unit_price = 0
                 po_unit_price = 0
                 length = None
-        
+
+            if factor != 1:
+                r["qty"] = int(r["qty"] / factor)
+                
             pi_amount = pi_unit_price * r["qty"]
             po_amount = po_unit_price * r["qty"]
         
