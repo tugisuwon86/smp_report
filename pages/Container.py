@@ -370,9 +370,11 @@ if submitted:
         return df_all
 
     meta_df = load_meta(option_company)
+    st.write("Loading metadata completed...")
     
     all_rows = []
     if uploaded_files:
+        st.write("Reading the loaded files")
         for uploaded in uploaded_files:
             suffix = uploaded.name.lower()
         
