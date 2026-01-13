@@ -287,7 +287,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    st.write("Here processing: ", row)
+    # st.write("Here processing: ", row)
     item = str(row["item"])
     if option_company == "Hitek":
         if 'ceramic ir' in item.lower():
@@ -313,7 +313,6 @@ def best_meta_match(row, meta_df, option_company):
         row["composition"] = "5*12"
         width_final = 60
         factor = 5
-        st.write(width_final, factor, row["composition"])
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
@@ -332,12 +331,12 @@ def best_meta_match(row, meta_df, option_company):
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             row["composition"] = 'nan'
-        st.write("description value: ", m["QB Description"], item)
+        # st.write("description value: ", m["QB Description"], item)
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
             total_score = -1
             multiplier = sum([[0,1][x.lower() in m["QB Description"].lower() or x.lower() in m["Description"]] for x in item.split()])
-            if factor != 1:
-                st.write('special case: ', m["Width"], row["composition"], ('/' in str(m["Width"]) or '*' in str(m["Width"])), str(row["composition"]) != 'nan', (str(row["composition"]) != 'nan' and ('/' in str(m["Width"]) or '*' in str(m["Width"]))))
+            # if factor != 1:
+            #     st.write('special case: ', m["Width"], row["composition"], ('/' in str(m["Width"]) or '*' in str(m["Width"])), str(row["composition"]) != 'nan', (str(row["composition"]) != 'nan' and ('/' in str(m["Width"]) or '*' in str(m["Width"]))))
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and ('/' in str(m["Width"]) or '*' in str(m["Width"]))):
                 meta_width = extract_width_from_meta(m["Description"])
                 # 2️⃣ Width match (only when width_final < 60)
@@ -355,9 +354,9 @@ def best_meta_match(row, meta_df, option_company):
                 score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score * multiplier
-                st.write(width_score, item_score, total_score)
+                # st.write(width_score, item_score, total_score)
             if total_score > best_score:
-                st.write(item, m["Width"], m["Description"], total_score)
+                # st.write(item, m["Width"], m["Description"], total_score)
                 best_score = total_score
                 best_row = m
 
