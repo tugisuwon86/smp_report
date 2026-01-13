@@ -370,6 +370,7 @@ if submitted:
         return df_all
 
     meta_df = load_meta(option_company)
+    st.write('meta df columns: ', ','.join(meta_df.columns))
     
     all_rows = []
     if uploaded_files:
