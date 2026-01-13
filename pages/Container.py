@@ -306,6 +306,8 @@ def best_meta_match(row, meta_df, option_company):
         vlt = 70 # just for geoshield
     width_final = int(row["width"])
 
+    # if width = 12 
+
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
     if candidates.shape[0] == 0:
@@ -443,8 +445,8 @@ if submitted:
         df_norm["item"] = df_norm["item"].ffill()
         df_norm['width'] = df_norm['width'].fillna(method='ffill')
         st.write("Extracted information")
-        st.dataframe(df_norm.head(100))
-    
+        st.dataframe(df_norm.head(200))
+        st.write(a)
         # STEP 3: parse size fields properly
         widths = []
         lengths = []
@@ -476,8 +478,10 @@ if submitted:
                 })
     
         df_final = pd.DataFrame(final_rows)
+        # only process row with quantity > 0
+        df_final = df_final[df_final['qty'] > 0]
         st.write('consolidated')
-        st.dataframe(df_final.head(100))
+        st.dataframe(df_final.head(200))
     
         # ============================================
         # 4. JOIN WITH META (by vlt)
