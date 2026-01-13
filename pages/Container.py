@@ -285,6 +285,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df):
+    st.write("Here processing: ", row)
     item = str(row["item"])
     try:
         vlt = float(str(row["vlt"]).strip().replace('%', ''))
@@ -327,7 +328,7 @@ def best_meta_match(row, meta_df):
                 item_score = score1 + score2
                 total_score = width_score + item_score
             if total_score > best_score:
-                # st.write(item, m["Proforma_Invoice_Width"], m["Proforma_Invoice_Description"], total_score)
+                st.write(item, m["Width"], m["Description"], total_score)
                 best_score = total_score
                 best_row = m
 
@@ -473,12 +474,14 @@ if submitted:
                 description = meta_match["Description"]
                 pi_unit_price = float(meta_match["Price"])
                 po_unit_price = float(meta_match["PO Price"])
+                length = meta_match["Length"]
             else:
                 type_code = ""
                 techpia_code = ""
                 description = ""
                 pi_unit_price = 0
                 po_unit_price = 0
+                length = None
         
             pi_amount = pi_unit_price * r["qty"]
             po_amount = po_unit_price * r["qty"]
@@ -489,7 +492,7 @@ if submitted:
                 "description": description,
                 "vlt": r["vlt"],
                 "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
-                "length": r["length"],
+                "length": r["length"] if r["length"] is not None and r["length"] != "" and r["length"] != 0 else length,
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
                 "quantity": r["qty"],
                 "pi_unit_price": f"{pi_unit_price:,.2f}",
