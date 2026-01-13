@@ -433,7 +433,7 @@ if submitted:
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
         st.write("Extracted information")
-        st.dataframe(df_norm.head(30))
+        st.dataframe(df_norm.head(100))
     
         # STEP 3: parse size fields properly
         widths = []
