@@ -458,9 +458,12 @@ if submitted:
         lengths = []
         parts = []
     
-        for t in df_norm["original_size_text"]:
+        for ww, t in zip(df_norm["width"], df_norm["original_size_text"]):
             w, l, p = parse_size(t)
-            widths.append(w)
+            if w is None:
+                widths.append(ww)
+            else:
+                widths.append(w)
             lengths.append(l)
             parts.append(p)
     
