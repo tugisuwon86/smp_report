@@ -285,9 +285,15 @@ def extract_width_from_meta(desc):
     return None
 
 
-def best_meta_match(row, meta_df):
+def best_meta_match(row, meta_df, option_company):
     st.write("Here processing: ", row)
     item = str(row["item"])
+    if option_company == "Hitek":
+        if 'ceramic ir' in item.lower():
+            item += ' PREMIUM'
+        elif 'plus' in item.lower() and 'ceramic' in item.lower():
+            item += ' ALPHA'
+        
     try:
         vlt = float(str(row["vlt"]).strip().replace('%', ''))
     except:
@@ -469,7 +475,7 @@ if submitted:
         matched_rows = []
     
         for _, r in df_final.iterrows():
-            meta_match = best_meta_match(r, meta_df)
+            meta_match = best_meta_match(r, meta_df, option_company)
         
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
