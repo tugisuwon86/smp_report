@@ -337,7 +337,7 @@ def best_meta_match(row, meta_df, option_company):
             total_score = -1
             multiplier = sum([[0,1][x.lower() in m["QB Description"].lower() or x.lower() in m["Description"]] for x in item.split()])
             if factor != 1:
-                st.write('special case: ', m["Width"], row["comopsition"])
+                st.write('special case: ', m["Width"], row["composition"])
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and ('/' in str(m["Width"]) or '*' in str(m["Width"]))):
                 meta_width = extract_width_from_meta(m["Description"])
                 # 2️⃣ Width match (only when width_final < 60)
