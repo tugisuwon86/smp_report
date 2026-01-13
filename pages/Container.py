@@ -448,7 +448,9 @@ if submitted:
     
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
+        df_norm['width'] = df_norm['width'].fillna(method='ffill')
         df_norm['width'] = df_norm['width'].ffill()
+        df_norm['original_size_text'] = df_norm['original_size_text'].fillna(method='ffill')
         df_norm['original_size_text'] = df_norm['original_size_text'].ffill()
         st.write("Extracted information")
         st.dataframe(df_norm.head(200))
