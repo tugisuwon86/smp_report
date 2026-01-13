@@ -310,6 +310,7 @@ def best_meta_match(row, meta_df):
             row["composition"] = 'nan'
         st.write("description value: ", m["Description"])
         if any([x.lower() in m["Description"].lower() for x in item.split()]):
+            total_score = -1
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and '/' in str(m["Width"])):
                 meta_width = extract_width_from_meta(m["Description"])
                 # 2️⃣ Width match (only when width_final < 60)
