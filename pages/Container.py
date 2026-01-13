@@ -44,10 +44,11 @@ Required output fields:
 - original_size_text: original size description exactly as shown in the source
 
 Composition (combination) extraction rules:
-1. If the source explicitly provides a width split, extract it:
+1. If the source explicitly provides a width split, extract it in descreasing order (always):
    - Examples:
      - "60 (36/24)" → composition = [36, 24]
      - "36/24" → composition = [36, 24]
+     - "24/36" → composition = [36, 24]
 2. The sum of composition values MUST equal the total width.
 3. If no explicit split is present, set composition = null.
 4. Do NOT derive, infer, or compute composition values.
