@@ -297,7 +297,7 @@ def best_meta_match(row, meta_df):
     if candidates.shape[0] == 0:
         candidates = meta_df.copy()
 
-    candidates["compare"] = candidates[["Description", "Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
+    candidates["compare"] = candidates[["QB Description", "Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
     candidates = candidates[candidates["compare"].str.contains(str(width_final))]
     # st.dataframe(candidates.head(2))
     if candidates.empty:
@@ -309,8 +309,8 @@ def best_meta_match(row, meta_df):
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]):
             row["composition"] = 'nan'
-        st.write("description value: ", m["Description"])
-        if any([x.lower() in m["Description"].lower() for x in item.split()]):
+        st.write("description value: ", m["QB Description"])
+        if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
             total_score = -1
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and '/' in str(m["Width"])):
                 meta_width = extract_width_from_meta(m["Description"])
@@ -323,8 +323,8 @@ def best_meta_match(row, meta_df):
     
                 # 3️⃣ Fuzzy match on item name
                 # score1 = fuzz.token_set_ratio(item, m["description"])
-                score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["Description"])))
-                score2 = max(fuzz.token_set_ratio(item, m["Description"]), fuzz.token_set_ratio(item, m["Description"]))
+                score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["QB Description"])))
+                score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["QB Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score
             if total_score > best_score:
