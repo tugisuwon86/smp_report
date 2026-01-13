@@ -313,7 +313,7 @@ def best_meta_match(row, meta_df):
         st.write("description value: ", m["QB Description"], item)
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
             total_score = -1
-            multiplier = sum([[0,1][x.lower() in m["QB Description"].lower()] for x in item.split()])
+            multiplier = sum([[0,1][x.lower() in m["QB Description"].lower() or x.lower() in m["Description"]] for x in item.split()])
             if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and '/' in str(m["Width"])):
                 meta_width = extract_width_from_meta(m["Description"])
                 # 2️⃣ Width match (only when width_final < 60)
@@ -326,7 +326,7 @@ def best_meta_match(row, meta_df):
                 # 3️⃣ Fuzzy match on item name
                 # score1 = fuzz.token_set_ratio(item, m["description"])
                 score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["QB Description"])))
-                score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["QB Description"]))
+                score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score * multiplier
                 st.write(width_score, item_score, total_score)
