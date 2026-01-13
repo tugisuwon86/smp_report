@@ -6,6 +6,7 @@ from collections import Counter
 import itertools
 import json
 from google import genai
+import numpy as np
 
 from google.genai import types 
 retry_options = types.HttpRetryOptions(
@@ -449,9 +450,9 @@ if submitted:
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
         df_norm['width'] = df_norm['width'].fillna(method='ffill')
-        df_norm['width'] = df_norm['width'].ffill()
+        df_norm['width'] = df_norm['width'].replace(r"^\s*$", np.nan, regex=True).ffill()
         df_norm['original_size_text'] = df_norm['original_size_text'].fillna(method='ffill')
-        df_norm['original_size_text'] = df_norm['original_size_text'].ffill()
+        df_norm['original_size_text'] = df_norm['original_size_text'].replace(r"^\s*$", np.nan, regex=True).ffill()
         st.write("Extracted information")
         st.dataframe(df_norm.head(200))
 
