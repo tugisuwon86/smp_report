@@ -286,7 +286,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    # st.write("Here processing: ", row)
+    st.write("Here processing: ", row)
     item = str(row["item"])
     if option_company == "Hitek":
         if 'ceramic ir' in item.lower():
