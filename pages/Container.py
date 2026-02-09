@@ -252,7 +252,10 @@ def consolidate_group(df):
     lengths = []
 
     for _, r in df.iterrows():
-        qty = int(r["qty"])
+        try:
+            qty = int(r["qty"])
+        except:
+            qty = 0
         width = r["width"]
         length = r["length"]
         parts = r.get("parts")  # backward compatibility
