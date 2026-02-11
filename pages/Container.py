@@ -372,7 +372,7 @@ models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
     "Company Name: ",
-    ("Geoshield", "Hitek", "UVIRON")
+    ("Geoshield", "Hitek", "UVIRON", "SMP")
 )
 # option = st.selectbox(
 #     "Proforma vs Purchase Order",
