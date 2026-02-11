@@ -252,7 +252,10 @@ def consolidate_group(df):
     lengths = []
 
     for _, r in df.iterrows():
-        qty = int(r["qty"])
+        try:
+            qty = int(r["qty"])
+        except:
+            qty = 0
         width = r["width"]
         length = r["length"]
         parts = r.get("parts")  # backward compatibility
@@ -331,7 +334,7 @@ def best_meta_match(row, meta_df, option_company):
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             row["composition"] = 'nan'
-        # st.write("description value: ", m["QB Description"], item)
+        st.write("description value: ", m["QB Description"], item)
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
             total_score = -1
             multiplier = sum([[0,1][x.lower() in m["QB Description"].lower() or x.lower() in m["Description"]] for x in item.split()])
@@ -354,7 +357,7 @@ def best_meta_match(row, meta_df, option_company):
                 score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
                 item_score = score1 + score2
                 total_score = width_score + item_score * multiplier
-                # st.write(width_score, item_score, total_score)
+                st.write(width_score, item_score, total_score)
             if total_score > best_score:
                 # st.write(item, m["Width"], m["Description"], total_score)
                 best_score = total_score
