@@ -397,7 +397,7 @@ if submitted:
     def load_meta(option_company):
         df = pd.read_excel("pages/CNT Data.xlsx", sheet_name="Sheet1", header=[0, 1])
         columns = list(df.columns[:9]) + [x for x in df.columns[9:] if option_company in x]
-        column_names = [x[0] for x in df.columns[:8]] + [x[1] for x in df.columns[8:] if option_company in x]
+        column_names = [x[0] for x in df.columns[:9]] + [x[1] for x in df.columns[9:] if option_company in x]
                 # flatten multi-level columns
         df_all = df[columns]
         df_all.columns = column_names
