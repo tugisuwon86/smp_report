@@ -334,7 +334,6 @@ def best_meta_match(row, meta_df, option_company):
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             row["composition"] = 'nan'
-        st.write(m)
         st.write("description value: ", m["QB Description"], m["Description"], item)
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]):
             total_score = -1
@@ -397,7 +396,7 @@ if submitted:
     @st.cache_data
     def load_meta(option_company):
         df = pd.read_excel("pages/CNT Data.xlsx", sheet_name="Sheet1", header=[0, 1])
-        columns = list(df.columns[:8]) + [x for x in df.columns[8:] if option_company in x]
+        columns = list(df.columns[:9]) + [x for x in df.columns[9:] if option_company in x]
         column_names = [x[0] for x in df.columns[:8]] + [x[1] for x in df.columns[8:] if option_company in x]
                 # flatten multi-level columns
         df_all = df[columns]
