@@ -553,5 +553,61 @@ if submitted:
         st.subheader("Final Merged Table")
         st.dataframe(df_join, use_container_width=True)
 
-st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv")
+        # Download buttons
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv", "text/csv")
+
+        # IIF generation (only if we have matched rows)
+        if not df_join.empty:
+            from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
+            
+            # Load QB items for validation
+            @st.cache_data
+            def load_qb_items():
+                items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
+                return items, vendors, customers
+            
+            qb_items, qb_vendors, qb_customers = load_qb_items()
+            
+            # Validate items
+            missing_items = validate_items_against_qb(matched_rows, qb_items)
+            if missing_items:
+                st.warning(f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n" + 
+                           "\n".join(missing_items[:5]) + 
+                           (f"\n... and {len(missing_items) - 5} more" if len(missing_items) > 5 else ""))
+            else:
+                st.success("✅ All items validated against QuickBooks.")
+            
+            # Map company to vendor name (you may need to adjust these)
+            vendor_map = {
+                "Geoshield": "Geoshield",
+                "Hitek": "Hitek",
+                "UVIRON": "UVIRON",
+                "SMP": "SMP"
+            }
+            vendor_name = vendor_map.get(option_company, option_company)
+            
+            # Generate PO IIF
+            po_iif_content = generate_purchase_order_iif(matched_rows, vendor_name=vendor_name)
+            
+            with col2:
+                st.download_button(
+                    "Download PO (.iif)", 
+                    po_iif_content, 
+                    f"purchase_order_{option_company}.iif", 
+                    "text/plain"
+                )
+            
+            # Generate SO IIF (using a default customer name - can be customized)
+            so_iif_content = generate_sales_order_iif(matched_rows, customer_name="Default Customer")
+            
+            with col3:
+                st.download_button(
+                    "Download SO (.iif)", 
+                    so_iif_content, 
+                    f"sales_order_{option_company}.iif", 
+                    "text/plain"
+                )
 
