@@ -512,7 +512,9 @@ if submitted:
     
         for _, r in df_final.iterrows():
             meta_match, factor = best_meta_match(r, meta_df, option_company)
-        
+            st.write('________________________')
+            st.write(r)
+            st.write(meta_match)
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
                 techpia_code = meta_match["Techpia (Code)"]
