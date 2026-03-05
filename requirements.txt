@@ -16,3 +16,4 @@ google-genai
 rapidfuzz 
 openpyxl
 extract_msg
+xlrd
