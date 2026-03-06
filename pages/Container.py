@@ -360,7 +360,7 @@ def best_meta_match(row, meta_df, option_company):
     for _, m in candidates.iterrows():
         # make sure slitting/composition is found under width slitting
         if str(row["composition"]) != 'nan' and str(row["composition"]) not in str(m["Width Slitting"]):
-            st.write('composition not found :', row["composition"], m["Width Slitting"])
+            # st.write('composition not found :', row["composition"], m["Width Slitting"])
             continue
         # make sure the width match!
         if str(row["width"])+"\"" not in m["QB Description"]:
@@ -657,14 +657,14 @@ if submitted:
         
             with col2:
                 download_button(
-                    po_iif_content,
+                    st.session_state.po_iif,
                     f"purchase_order_{option_company}.iif",
                     "Download PO (.iif)"
                 )
             
             with col3:
                 download_button(
-                    so_iif_content,
+                    st.session_state.so_iif,
                     f"sales_order_{option_company}.iif",
                     "Download SO (.iif)"
                 )
