@@ -333,10 +333,13 @@ def best_meta_match(row, meta_df, option_company):
     best_score = -1
     best_row = None
 
+    # force width to be 60 if composition exists!
+    if str(row["composition"]) != 'nan' and ('/' in str(row["composition"]) or '*' in str(row["composition"])):
+        row["width"] = 60
+    if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
+        row["composition"] = 'nan'
+        
     for _, m in candidates.iterrows():
-        if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
-            st.write('here?')
-            row["composition"] = 'nan'
         # make sure slitting/composition is found under width slitting
         if str(row["composition"]) != 'nan' and str(row["composition"]) not in str(m["Width Slitting"]):
             st.write('composition not found :', row["composition"], m["Width Slitting"])
