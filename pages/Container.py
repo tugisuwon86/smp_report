@@ -10,21 +10,21 @@ import numpy as np
 
 import base64
 
-# def download_button(data, filename, label):
-#     if isinstance(data, str):
-#         data = data.encode()
+def download_button(data, filename, label):
+    if isinstance(data, str):
+        data = data.encode()
 
-#     b64 = base64.b64encode(data).decode()
+    b64 = base64.b64encode(data).decode()
 
-#     href = (
-#         '<a download="' + filename + '" '
-#         'href="data:application/octet-stream;base64,' + b64 + '" '
-#         'style="display:inline-block;padding:0.5em 1em;color:white;'
-#         'background-color:#FF4B4B;text-decoration:none;border-radius:0.5em;font-weight:600;">'
-#         + label +
-#         '</a>'
-#     )
-#     st.markdown(href, unsafe_allow_html=True)
+    href = (
+        '<a download="' + filename + '" '
+        'href="data:application/octet-stream;base64,' + b64 + '" '
+        'style="display:inline-block;padding:0.5em 1em;color:white;'
+        'background-color:#FF4B4B;text-decoration:none;border-radius:0.5em;font-weight:600;">'
+        + label +
+        '</a>'
+    )
+    st.markdown(href, unsafe_allow_html=True)
     
 from google.genai import types 
 retry_options = types.HttpRetryOptions(
