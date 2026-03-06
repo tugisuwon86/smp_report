@@ -8,6 +8,30 @@ import json
 from google import genai
 import numpy as np
 
+import base64
+
+def download_button(data, filename, label):
+    if isinstance(data, str):
+        data = data.encode()
+
+    b64 = base64.b64encode(data).decode()
+
+    href = f"""
+        <a download="{filename}" href="data:file/octet-stream;base64,{b64}">
+            <button style="
+                background-color:#FF4B4B;
+                border:none;
+                color:white;
+                padding:0.5em 1em;
+                border-radius:0.5em;
+                cursor:pointer;
+            ">
+                {label}
+            </button>
+        </a>
+        """    
+    st.markdown(href, unsafe_allow_html=True)
+
 from google.genai import types 
 retry_options = types.HttpRetryOptions(
     # The number of attempts to make before failing the request
@@ -586,13 +610,11 @@ if submitted:
             st.session_state.csv_data = df_join.to_csv(index=False)
 
         with col1:
-            st.download_button(
-                "Download CSV",
-                st.session_state.csv_data,
+            download_button(
+                df_join.to_csv(index=False),
                 "output.csv",
-                "text/csv",
-                key="csv_download"
-            )
+                "Download CSV"
+            )        
         
         # IIF generation (only if we have matched rows)
         if not df_join.empty:
@@ -640,19 +662,15 @@ if submitted:
                 )
         
             with col2:
-                st.download_button(
-                    "Download PO (.iif)",
-                    st.session_state.po_iif,
+                download_button(
+                    po_iif_content,
                     f"purchase_order_{option_company}.iif",
-                    "text/plain",
-                    key="po_download"
+                    "Download PO (.iif)"
                 )
         
-            with col3:
-                st.download_button(
-                    "Download SO (.iif)",
-                    st.session_state.so_iif,
+           with col3:
+                download_button(
+                    so_iif_content,
                     f"sales_order_{option_company}.iif",
-                    "text/plain",
-                    key="so_download"
+                    "Download SO (.iif)"
                 )
