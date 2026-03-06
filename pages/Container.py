@@ -290,7 +290,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    debugging = False
+    debugging = True
     if debugging:
         st.write("Here processing: ", row)
     item = str(row["item"])
@@ -512,20 +512,19 @@ if submitted:
     
         for _, r in df_final.iterrows():
             meta_match, factor = best_meta_match(r, meta_df, option_company)
-            st.write('________________________')
-            st.write(r)
-            st.write(meta_match)
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
                 techpia_code = meta_match["Techpia (Code)"]
                 description = meta_match["Description"]
                 pi_unit_price = float(meta_match["Price"])
                 po_unit_price = float(meta_match["PO Price"])
+                slitting = meta_match["Width Slitting"]
                 length = meta_match["Length"]
             else:
                 type_code = ""
                 techpia_code = ""
                 description = ""
+                slitting = ""
                 pi_unit_price = 0
                 po_unit_price = 0
                 length = None
@@ -542,6 +541,7 @@ if submitted:
                 "description": description,
                 "vlt": r["vlt"],
                 "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
+                "width_slitting": slitting,
                 "length": r["length"] if r["length"] is not None and r["length"] != "" and r["length"] != 0 else length,
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
                 "quantity": r["qty"],
