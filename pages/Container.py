@@ -596,75 +596,75 @@ if submitted:
         if "downloads_ready" not in st.session_state:
             st.session_state.downloads_ready = False
 
-        # Download buttons
-        col1, col2, col3 = st.columns(3)
+        # # Download buttons
+        # col1, col2, col3 = st.columns(3)
         
-        # Prepare CSV once
-        if "csv_data" not in st.session_state:
-            st.session_state.csv_data = df_join.to_csv(index=False)
+        # # Prepare CSV once
+        # if "csv_data" not in st.session_state:
+        #     st.session_state.csv_data = df_join.to_csv(index=False)
 
-        with col1:
-            download_button(
-                df_join.to_csv(index=False),
-                "output.csv",
-                "Download CSV"
-            )        
+        # with col1:
+        #     download_button(
+        #         df_join.to_csv(index=False),
+        #         "output.csv",
+        #         "Download CSV"
+        #     )        
         
-        # IIF generation (only if we have matched rows)
-        if not df_join.empty:
+        # # IIF generation (only if we have matched rows)
+        # if not df_join.empty:
         
-            from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
+        #     from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
         
-            @st.cache_data
-            def load_qb_items():
-                items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
-                return items, vendors, customers
+        #     @st.cache_data
+        #     def load_qb_items():
+        #         items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
+        #         return items, vendors, customers
         
-            qb_items, qb_vendors, qb_customers = load_qb_items()
+        #     qb_items, qb_vendors, qb_customers = load_qb_items()
         
-            missing_items = validate_items_against_qb(matched_rows, qb_items)
+        #     missing_items = validate_items_against_qb(matched_rows, qb_items)
         
-            if missing_items:
-                st.warning(
-                    f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n"
-                    + "\n".join(missing_items[:5])
-                    + (f"\n... and {len(missing_items)-5} more" if len(missing_items) > 5 else "")
-                )
-            else:
-                st.success("✅ All items validated against QuickBooks.")
+        #     if missing_items:
+        #         st.warning(
+        #             f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n"
+        #             + "\n".join(missing_items[:5])
+        #             + (f"\n... and {len(missing_items)-5} more" if len(missing_items) > 5 else "")
+        #         )
+        #     else:
+        #         st.success("✅ All items validated against QuickBooks.")
         
-            vendor_map = {
-                "Geoshield": "Geoshield",
-                "Hitek": "Hitek",
-                "UVIRON": "UVIRON",
-                "SMP": "SMP"
-            }
+        #     vendor_map = {
+        #         "Geoshield": "Geoshield",
+        #         "Hitek": "Hitek",
+        #         "UVIRON": "UVIRON",
+        #         "SMP": "SMP"
+        #     }
         
-            vendor_name = vendor_map.get(option_company, option_company)
+        #     vendor_name = vendor_map.get(option_company, option_company)
         
-            # Generate files once and store
-            if "po_iif" not in st.session_state:
-                st.session_state.po_iif = generate_purchase_order_iif(
-                    matched_rows,
-                    vendor_name=vendor_name
-                )
+        #     # Generate files once and store
+        #     if "po_iif" not in st.session_state:
+        #         st.session_state.po_iif = generate_purchase_order_iif(
+        #             matched_rows,
+        #             vendor_name=vendor_name
+        #         )
         
-            if "so_iif" not in st.session_state:
-                st.session_state.so_iif = generate_sales_order_iif(
-                    matched_rows,
-                    customer_name="Default Customer"
-                )
+        #     if "so_iif" not in st.session_state:
+        #         st.session_state.so_iif = generate_sales_order_iif(
+        #             matched_rows,
+        #             customer_name="Default Customer"
+        #         )
         
-            with col2:
-                download_button(
-                    po_iif_content,
-                    f"purchase_order_{option_company}.iif",
-                    "Download PO (.iif)"
-                )
+        #     with col2:
+        #         download_button(
+        #             po_iif_content,
+        #             f"purchase_order_{option_company}.iif",
+        #             "Download PO (.iif)"
+        #         )
         
-           with col3:
-                download_button(
-                    so_iif_content,
-                    f"sales_order_{option_company}.iif",
-                    "Download SO (.iif)"
-                )
+        #    with col3:
+        #         download_button(
+        #             so_iif_content,
+        #             f"sales_order_{option_company}.iif",
+        #             "Download SO (.iif)"
+        #         )
