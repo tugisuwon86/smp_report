@@ -655,12 +655,12 @@ if submitted:
                     customer_name="Default Customer"
                 )
         
-        #     with col2:
-        #         download_button(
-        #             po_iif_content,
-        #             f"purchase_order_{option_company}.iif",
-        #             "Download PO (.iif)"
-        #         )
+            with col2:
+                download_button(
+                    po_iif_content,
+                    f"purchase_order_{option_company}.iif",
+                    "Download PO (.iif)"
+                )
         
         #    with col3:
         #         download_button(
