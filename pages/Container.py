@@ -290,7 +290,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    debugging = True
+    debugging = False
     if debugging:
         st.write("Here processing: ", row)
     item = str(row["item"])
@@ -420,7 +420,7 @@ if submitted:
         return df_all.dropna(subset=['Description'])
 
     meta_df = load_meta(option_company)
-    st.dataframe(meta_df.head(5))
+    # st.dataframe(meta_df.head(5))
     st.write("Loading metadata completed...")
     
     all_rows = []
@@ -575,61 +575,84 @@ if submitted:
         st.subheader("Final Merged Table")
         st.dataframe(df_join, use_container_width=True)
 
+        if "downloads_ready" not in st.session_state:
+            st.session_state.downloads_ready = False
+
         # Download buttons
         col1, col2, col3 = st.columns(3)
+        
+        # Prepare CSV once
+        if "csv_data" not in st.session_state:
+            st.session_state.csv_data = df_join.to_csv(index=False)
 
         with col1:
-            st.download_button("Download CSV", df_join.to_csv(index=False), "output.csv", "text/csv")
-
+            st.download_button(
+                "Download CSV",
+                st.session_state.csv_data,
+                "output.csv",
+                "text/csv",
+                key="csv_download"
+            )
+        
         # IIF generation (only if we have matched rows)
         if not df_join.empty:
+        
             from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
-            
-            # Load QB items for validation
+        
             @st.cache_data
             def load_qb_items():
                 items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
                 return items, vendors, customers
-            
+        
             qb_items, qb_vendors, qb_customers = load_qb_items()
-            
-            # Validate items
+        
             missing_items = validate_items_against_qb(matched_rows, qb_items)
+        
             if missing_items:
-                st.warning(f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n" + 
-                           "\n".join(missing_items[:5]) + 
-                           (f"\n... and {len(missing_items) - 5} more" if len(missing_items) > 5 else ""))
+                st.warning(
+                    f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n"
+                    + "\n".join(missing_items[:5])
+                    + (f"\n... and {len(missing_items)-5} more" if len(missing_items) > 5 else "")
+                )
             else:
                 st.success("✅ All items validated against QuickBooks.")
-            
-            # Map company to vendor name (you may need to adjust these)
+        
             vendor_map = {
                 "Geoshield": "Geoshield",
                 "Hitek": "Hitek",
                 "UVIRON": "UVIRON",
                 "SMP": "SMP"
             }
+        
             vendor_name = vendor_map.get(option_company, option_company)
-            
-            # Generate PO IIF
-            po_iif_content = generate_purchase_order_iif(matched_rows, vendor_name=vendor_name)
-            
+        
+            # Generate files once and store
+            if "po_iif" not in st.session_state:
+                st.session_state.po_iif = generate_purchase_order_iif(
+                    matched_rows,
+                    vendor_name=vendor_name
+                )
+        
+            if "so_iif" not in st.session_state:
+                st.session_state.so_iif = generate_sales_order_iif(
+                    matched_rows,
+                    customer_name="Default Customer"
+                )
+        
             with col2:
                 st.download_button(
-                    "Download PO (.iif)", 
-                    po_iif_content, 
-                    f"purchase_order_{option_company}.iif", 
-                    "text/plain"
+                    "Download PO (.iif)",
+                    st.session_state.po_iif,
+                    f"purchase_order_{option_company}.iif",
+                    "text/plain",
+                    key="po_download"
                 )
-            
-            # Generate SO IIF (using a default customer name - can be customized)
-            so_iif_content = generate_sales_order_iif(matched_rows, customer_name="Default Customer")
-            
+        
             with col3:
                 st.download_button(
-                    "Download SO (.iif)", 
-                    so_iif_content, 
-                    f"sales_order_{option_company}.iif", 
-                    "text/plain"
+                    "Download SO (.iif)",
+                    st.session_state.so_iif,
+                    f"sales_order_{option_company}.iif",
+                    "text/plain",
+                    key="so_download"
                 )
-
