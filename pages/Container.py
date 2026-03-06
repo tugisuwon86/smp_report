@@ -596,19 +596,19 @@ if submitted:
         if "downloads_ready" not in st.session_state:
             st.session_state.downloads_ready = False
 
-        # # Download buttons
-        # col1, col2, col3 = st.columns(3)
+        # Download buttons
+        col1, col2, col3 = st.columns(3)
         
-        # # Prepare CSV once
-        # if "csv_data" not in st.session_state:
-        #     st.session_state.csv_data = df_join.to_csv(index=False)
+        # Prepare CSV once
+        if "csv_data" not in st.session_state:
+            st.session_state.csv_data = df_join.to_csv(index=False)
 
-        # with col1:
-        #     download_button(
-        #         df_join.to_csv(index=False),
-        #         "output.csv",
-        #         "Download CSV"
-        #     )        
+        with col1:
+            download_button(
+                df_join.to_csv(index=False),
+                "output.csv",
+                "Download CSV"
+            )        
         
         # # IIF generation (only if we have matched rows)
         # if not df_join.empty:
