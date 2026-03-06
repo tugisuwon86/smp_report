@@ -335,7 +335,11 @@ def best_meta_match(row, meta_df, option_company):
 
     for _, m in candidates.iterrows():
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
+            st.write('here?')
             row["composition"] = 'nan'
+        if str(row["composition"]) != 'nan' and str(row["composition"]) not in m["Width Slitting"]:
+            st.write('composition not found :', row["composition"], m["Width Slitting"])
+            continue
         if debugging:
             st.write("description value: ", m["QB Description"], m["Description"], item, any([x.lower() in m["QB Description"].lower() for x in item.split()]))
         if any([x.lower() in m["QB Description"].lower() for x in item.split()]) or any([x.lower() in m["Description"].lower() for x in item.split()]):
