@@ -662,9 +662,9 @@ if submitted:
                     "Download PO (.iif)"
                 )
         
-        #    with col3:
-        #         download_button(
-        #             so_iif_content,
-        #             f"sales_order_{option_company}.iif",
-        #             "Download SO (.iif)"
-        #         )
+           with col3:
+                download_button(
+                    so_iif_content,
+                    f"sales_order_{option_company}.iif",
+                    "Download SO (.iif)"
+                )
