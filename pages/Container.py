@@ -541,7 +541,7 @@ if submitted:
             if factor != 1:
                 r["qty"] = int(r["qty"] / factor)
             width = r["width"]
-            if int(width) < 60 and ("*" in slitting):
+            if int(width) < 60 and ("*" in str(slitting)):
                 width = 60
                 
             pi_amount = pi_unit_price * r["qty"]
