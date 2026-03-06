@@ -337,7 +337,7 @@ def best_meta_match(row, meta_df, option_company):
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             st.write('here?')
             row["composition"] = 'nan'
-        if str(row["composition"]) != 'nan' and str(row["composition"]) not in m["Width Slitting"]:
+        if str(row["composition"]) != 'nan' and str(row["composition"]) not in str(m["Width Slitting"]):
             st.write('composition not found :', row["composition"], m["Width Slitting"])
             continue
         if debugging:
@@ -413,6 +413,7 @@ if submitted:
         return df_all.dropna(subset=['Description'])
 
     meta_df = load_meta(option_company)
+    st.dataframe(meta_df.head(5))
     st.write("Loading metadata completed...")
     
     all_rows = []
