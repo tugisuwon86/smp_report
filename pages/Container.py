@@ -337,8 +337,12 @@ def best_meta_match(row, meta_df, option_company):
         if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
             st.write('here?')
             row["composition"] = 'nan'
+        # make sure slitting/composition is found under width slitting
         if str(row["composition"]) != 'nan' and str(row["composition"]) not in str(m["Width Slitting"]):
             st.write('composition not found :', row["composition"], m["Width Slitting"])
+            continue
+        # make sure the width match!
+        if str(width)+"\"" not in m["QB Description"]:
             continue
         if debugging:
             st.write("description value: ", m["QB Description"], m["Description"], item, any([x.lower() in m["QB Description"].lower() for x in item.split()]))
@@ -536,6 +540,9 @@ if submitted:
 
             if factor != 1:
                 r["qty"] = int(r["qty"] / factor)
+            width = r["width"]
+            if int(width) < 60 and ("/" in slitting or "*" in slitting):
+                width = 60
                 
             pi_amount = pi_unit_price * r["qty"]
             po_amount = po_unit_price * r["qty"]
@@ -545,7 +552,7 @@ if submitted:
                 "techpia_code": techpia_code,
                 "description": description,
                 "vlt": r["vlt"],
-                "width": str(r["width"]) + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
+                "width": str(width), # + ' (' + r["composition"] + ")" if '/' in r["composition"] else str(r["width"]),
                 "width_slitting": slitting,
                 "length": r["length"] if r["length"] is not None and r["length"] != "" and r["length"] != 0 else length,
                 "thickness": "1.5" if 'IC-ALPU' not in type_code else "2.0",
