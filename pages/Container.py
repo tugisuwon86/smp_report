@@ -661,8 +661,8 @@ if submitted:
                     f"purchase_order_{option_company}.iif",
                     "Download PO (.iif)"
                 )
-        
-           with col3:
+            
+            with col3:
                 download_button(
                     so_iif_content,
                     f"sales_order_{option_company}.iif",
