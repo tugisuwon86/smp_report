@@ -342,7 +342,7 @@ def best_meta_match(row, meta_df, option_company):
             st.write('composition not found :', row["composition"], m["Width Slitting"])
             continue
         # make sure the width match!
-        if str(width)+"\"" not in m["QB Description"]:
+        if str(row["width"])+"\"" not in m["QB Description"]:
             continue
         if debugging:
             st.write("description value: ", m["QB Description"], m["Description"], item, any([x.lower() in m["QB Description"].lower() for x in item.split()]))
