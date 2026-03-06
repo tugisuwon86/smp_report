@@ -17,21 +17,22 @@ def download_button(data, filename, label):
     b64 = base64.b64encode(data).decode()
 
     href = f"""
-        <a download="{filename}" href="data:file/octet-stream;base64,{b64}">
-            <button style="
-                background-color:#FF4B4B;
-                border:none;
-                color:white;
-                padding:0.5em 1em;
-                border-radius:0.5em;
-                cursor:pointer;
-            ">
-                {label}
-            </button>
-        </a>
-        """    
+    <a download="{filename}" 
+       href="data:application/octet-stream;base64,{b64}"
+       style="
+            display:inline-block;
+            padding:0.5em 1em;
+            color:white;
+            background-color:#FF4B4B;
+            text-decoration:none;
+            border-radius:0.5em;
+            font-weight:600;
+       ">
+        {label}
+    </a>
+    """
     st.markdown(href, unsafe_allow_html=True)
-
+    
 from google.genai import types 
 retry_options = types.HttpRetryOptions(
     # The number of attempts to make before failing the request
