@@ -204,6 +204,7 @@ Your task is to accurately parse the text and return structured JSON output cont
      - Address lines
      - City, State, ZIP
      - Optional email or phone number
+     - Find selling date or contract date and insert it to the item table extraction output under **date**
 
    ⚠️ Do NOT merge information across columns or sections — extract content directly under the respective header.
 
@@ -214,7 +215,7 @@ Your task is to accurately parse the text and return structured JSON output cont
    - Map fields as follows:
      - **product** → value under "Item" or "Product" column.
      - **description** → value under "Description" or "SKU" column (contains product details or identifiers). It should not contain space. It is unique identify that may have hyphen. If the string is broken by colon, only print the last element with colon delimiter.
-     - **date** -> for now just put today's date in YYYY-MM-DD format
+     - **date** -> date found from previous section (selling/contract date in YYYY-MM-DD)
      - **quantity** → integer quantity value (look for whole numbers).
      - **price** -> price per roll/item, often decimal or currency
      - **amount** → total price, often decimal or currency (may be missing).
