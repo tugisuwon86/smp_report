@@ -38,7 +38,6 @@ def get_qb_item_code(row, qb_items=[]):
         temp = row["techpia_code"]
     if "description" in row:
         temp = row["description"]
-    awefjiowaef
     if temp != '' and qb_items != []:
         temp_ = [x for x in qb_items if temp in x]
         if temp_:
