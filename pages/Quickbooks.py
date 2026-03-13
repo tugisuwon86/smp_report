@@ -153,6 +153,8 @@ if not df.empty:
 
     qb_items, qb_vendors, qb_customers = load_qb_items()
 
+    matched_rows = df.to_json(orient="records")
+    
     missing_items = validate_items_against_qb(matched_rows, qb_items)
 
     if missing_items:
