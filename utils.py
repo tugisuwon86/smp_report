@@ -168,9 +168,7 @@ def query_openai(prompt):
 
     # fallback
     if msg.content:
-        return msg.content
-    elif hasattr(msg, "reasoning"):
-        return msg.reasoning
+        return msg
     else:
         return ""
 
