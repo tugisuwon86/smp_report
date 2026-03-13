@@ -107,8 +107,22 @@ elif option == 'PDF':
                     st.text(response)
 
 # IIF generation (only if we have matched rows)
-if not df.empty:
 
+if not df.empty:
+    # Download buttons
+    col1, col2, col3 = st.columns(3)
+    
+    # Prepare CSV once
+    if "csv_data" not in st.session_state:
+        st.session_state.csv_data = df.to_csv(index=False)
+
+    with col1:
+        download_button(
+            df.to_csv(index=False),
+            "output.csv",
+            "Download CSV"
+        )     
+        
     from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
 
     @st.cache_data
