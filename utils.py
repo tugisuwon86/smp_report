@@ -241,10 +241,14 @@ Your task is to accurately parse the text and return structured JSON output cont
     }}
   ]
 }}
-Return ONLY valid JSON.
-Do not include reasoning.
-Do not include explanation.
-Do not include markdown.
+You must return STRICT JSON.
+
+Rules:
+- No explanation
+- No reasoning
+- No markdown
+- No text before JSON
+- No text after JSON
 
 ---
 
