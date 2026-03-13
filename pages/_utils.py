@@ -55,7 +55,12 @@ def qb_date(d=None):
         return d
     return d.strftime("%m/%d/%Y")
 
+def date_Format_convert(x):
+    from datetime import datetime
 
+    y, m, d = x.split("/")
+    return f"{m}/{d}/{y}"
+    
 def validate_items_against_qb(rows, qb_items):
     """
     Validate that all item codes in rows exist in QuickBooks.
@@ -78,8 +83,6 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
     """
 
     if txn_date is None:
-        if 'date' in row:
-            txn_date = row['date']
         txn_date = qb_date()
 
     lines = [
@@ -113,8 +116,13 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
         except (ValueError, TypeError):
             amount = qty * price
 
+        try:
+            date = date_Format_convert(str(r.get("date", 0)).replace(",", ""))
+        except:
+            date = txn_date
+
         lines.append(
-            f"SPL\tPURCHORD\t{txn_date}\tInventory Asset\t{vendor_name}\t{item_code}\t{qty}\t{price}\t{amount}"
+            f"SPL\tPURCHORD\t{date}\tInventory Asset\t{vendor_name}\t{item_code}\t{qty}\t{price}\t{amount}"
         )
 
     lines.append("ENDTRNS")
@@ -158,8 +166,13 @@ def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn
         except:
             amount = qty * price
 
+        try:
+            date = date_Format_convert(str(r.get("date", 0)).replace(",", ""))
+        except:
+            date = txn_date
+
         lines.append(
-            f"SPL\tSALESORDER\t{txn_date}\tSales\t{customer_name}\t{qty}\t{price}\t{amount}\t{item_code}"
+            f"SPL\tSALESORDER\t{date}\tSales\t{customer_name}\t{qty}\t{price}\t{amount}\t{item_code}"
         )
 
     lines.append("ENDTRNS")
