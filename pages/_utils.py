@@ -97,7 +97,6 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
     )
 
     unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
-    st.write('labels: ', unit_price, amount)
     for r in rows:
 
         item_code = get_qb_item_code(r, qb_items)
