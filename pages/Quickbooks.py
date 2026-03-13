@@ -51,7 +51,7 @@ if option == 'Images':
                     
                     # Call the Gemini API
                     extracted_data = call_gemini_api(base64_image, mime_type)
-                    df_extracted = convert_markdown_to_dataframe(extracted_data)
+                    df = convert_markdown_to_dataframe(extracted_data)
                     
                     st.success("Extraction Complete!")
                     st.subheader("Extracted Structured Data (Markdown)")
@@ -64,11 +64,11 @@ if option == 'Images':
                     st.markdown(extracted_data)
     
                     # Check if the DataFrame conversion was successful and it's a valid table
-                    if not df_extracted.empty and 'Result' not in df_extracted.columns:
-                         st.dataframe(df_extracted)
+                    if not df.empty and 'Result' not in df.columns:
+                         st.dataframe(df)
                          
                          # Optional: Add download button for CSV
-                         csv = df_extracted.to_csv(index=False).encode('utf-8')
+                         csv = df.to_csv(index=False).encode('utf-8')
                          st.download_button(
                             label="Download Data as CSV",
                             data=csv,
@@ -105,3 +105,62 @@ elif option == 'PDF':
                 except json.JSONDecodeError:
                     st.error("Could not parse structured JSON. Here’s the raw response:")
                     st.text(response)
+
+# IIF generation (only if we have matched rows)
+if not df.empty:
+
+    from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
+
+    @st.cache_data
+    def load_qb_items():
+        items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
+        return items, vendors, customers
+
+    qb_items, qb_vendors, qb_customers = load_qb_items()
+
+    missing_items = validate_items_against_qb(matched_rows, qb_items)
+
+    if missing_items:
+        st.warning(
+            f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n"
+            + "\n".join(missing_items[:5])
+            + (f"\n... and {len(missing_items)-5} more" if len(missing_items) > 5 else "")
+        )
+    else:
+        st.success("✅ All items validated against QuickBooks.")
+
+    vendor_map = {
+        "Geoshield": "Geoshield",
+        "Hitek": "Hitek",
+        "UVIRON": "UVIRON",
+        "SMP": "SMP"
+    }
+
+    vendor_name = vendor_map.get(option_company, option_company)
+
+    # Generate files once and store
+    if "po_iif" not in st.session_state:
+        st.session_state.po_iif = generate_purchase_order_iif(
+            matched_rows,
+            vendor_name=vendor_name
+        )
+
+    if "so_iif" not in st.session_state:
+        st.session_state.so_iif = generate_sales_order_iif(
+            matched_rows,
+            customer_name="Default Customer"
+        )
+
+    with col2:
+        download_button(
+            st.session_state.po_iif,
+            f"purchase_order_{option_company}.iif",
+            "Download PO (.iif)"
+        )
+    
+    with col3:
+        download_button(
+            st.session_state.so_iif,
+            f"sales_order_{option_company}.iif",
+            "Download SO (.iif)"
+        )
