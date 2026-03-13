@@ -132,8 +132,6 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
 def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn_date=None, docnum=10001):
 
     if txn_date is None:
-        if 'date' in row:
-            txn_date = row['date']
         txn_date = qb_date()
 
     lines = [
