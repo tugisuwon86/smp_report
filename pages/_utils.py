@@ -38,7 +38,7 @@ def get_qb_item_code(row, qb_items=[]):
         temp = row["techpia_code"]
     if "description" in row:
         temp = row["description"]
-    st.write(a)
+    awefjiowaef
     if temp != '' and qb_items != []:
         temp_ = [x for x in qb_items if temp in x]
         if temp_:
@@ -69,7 +69,6 @@ def validate_items_against_qb(rows, qb_items):
             missing.append(f"{code} ({r.get('description', 'No description')})")
     return missing
 
-
 def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, txn_date=None, docnum=50001):
     """
     Generate IIF content for a Purchase Order.
@@ -94,6 +93,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
     )
 
     unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
+    st.write('labels: ', unit_price, amount)
     for r in rows:
 
         item_code = get_qb_item_code(r, qb_items)
