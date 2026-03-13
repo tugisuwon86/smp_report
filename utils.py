@@ -168,7 +168,7 @@ def query_openai(prompt):
         api_key=st.secrets['gemini-api']['api_token'],
         http_options=http_options
     )
-    prompt = prompt.format(data=raw_data)
+    # prompt = prompt.format(data=raw_data)
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
