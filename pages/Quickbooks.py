@@ -148,7 +148,11 @@ if not df.empty:
 
     @st.cache_data
     def load_qb_items():
-        items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
+        import pickle
+        with open('pages/meta_iff.pkl', 'rb') as f:
+            reference = pickle.load(f)
+        items, vendors, customers = reference['items'], reference['vendors'], reference['customers']
+        # items, vendors, customers = load_qb_lists_from_iif("pages/smp.IIF")
         return items, vendors, customers
 
     qb_items, qb_vendors, qb_customers = load_qb_items()
