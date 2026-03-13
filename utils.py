@@ -179,7 +179,7 @@ def query_openai(prompt):
     )
     
     rows = json.loads(response.text)
-    st.write(rows)
+    # st.write(rows)
     return rows
 
 def build_prompt(text):
