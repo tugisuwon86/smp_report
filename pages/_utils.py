@@ -64,7 +64,7 @@ def validate_items_against_qb(rows, qb_items):
     """
     missing = []
     for r in rows:
-        code = get_qb_item_code(r)
+        code = get_qb_item_code(r, qb_items)
         if code and code not in qb_items:
             missing.append(f"{code} ({r.get('description', 'No description')})")
     return missing
