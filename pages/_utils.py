@@ -39,8 +39,10 @@ def get_qb_item_code(row, qb_items=[]):
     if row.get("description"):
         temp = row["description"]
     if temp != '' and qb_items != []:
-        temp = [x for x in qb_items if temp in x]
-        return temp
+        temp_ = [x for x in qb_items if temp in x]
+        st.write(row, temp_)
+        if temp_:
+            return temp_[0]
     # Fallback: construct a name (may not exist in QB)
     base = f"{row.get('item', 'Unknown')} {row.get('vlt', 0)}%"
     return f"{base} {row.get('width', 0)}\""
