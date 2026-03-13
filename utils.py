@@ -36,6 +36,7 @@ SYSTEM_PROMPT = (
     "(which contains structured data, likely a table or list). You must extract all text and structure "
     "the data into a clean, comprehensive Markdown table format, using appropriate headings and columns based on "
     "the content. Do not include any introductory or concluding sentences, only the Markdown table."
+    "Return ONLY valid JSON. Do not include reasoning. Do not include explanations."
 )
 
 USER_QUERY = (
