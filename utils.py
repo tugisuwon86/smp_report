@@ -165,12 +165,7 @@ def query_openai(prompt):
     )
 
     msg = completion.choices[0].message
-
-    # fallback
-    if msg.content:
-        return msg
-    else:
-        return ""
+    return msg
 
 def build_prompt(text):
     return f"""
