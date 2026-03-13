@@ -160,8 +160,7 @@ def query_openai(prompt):
         messages=[
             {"role": "system", "content": "Return ONLY valid JSON."},
             {"role": "user", "content": prompt}
-        ],
-        response_format={"type": "json_object"}
+        ]
     )
 
     msg = completion.choices[0].message
