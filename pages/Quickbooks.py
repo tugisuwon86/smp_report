@@ -154,11 +154,12 @@ if not df.empty:
     qb_items, qb_vendors, qb_customers = load_qb_items()
 
     matched_rows = json.loads(df.to_json(orient="records"))
-    st.write(matched_rows[0])
+    # st.write(matched_rows[0])
     
     missing_items = validate_items_against_qb(matched_rows, qb_items)
-
+    
     if missing_items:
+        st.write("Missing items: ", missing_items)
         st.warning(
             f"⚠️ Warning: {len(missing_items)} item(s) not found in QuickBooks:\n"
             + "\n".join(missing_items[:5])
@@ -196,13 +197,13 @@ if not df.empty:
     with col2:
         download_button(
             st.session_state.po_iif,
-            f"purchase_order_{option_company}.iif",
+            f"purchase_order_{vendor_}.iif",
             "Download PO (.iif)"
         )
     
     with col3:
         download_button(
             st.session_state.so_iif,
-            f"sales_order_{option_company}.iif",
+            f"sales_order_{vendor_}.iif",
             "Download SO (.iif)"
         )
