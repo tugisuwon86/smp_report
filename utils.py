@@ -148,7 +148,20 @@ def convert_markdown_to_dataframe(markdown_table: str) -> pd.DataFrame:
     
     return df    
 ### PDF files
-from openai import OpenAI
+from google.genai import types 
+retry_options = types.HttpRetryOptions(
+    # The number of attempts to make before failing the request
+    attempts=3, 
+    # The initial delay (in seconds)
+    initial_delay=1.0, 
+    # The maximum delay (in seconds) between retries
+    max_delay=60.0
+)
+
+# 3. Create the HttpOptions object
+http_options = types.HttpOptions(
+    retry_options=retry_options
+)
 
 def query_openai(prompt):
     client = genai.Client(
