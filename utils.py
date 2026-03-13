@@ -155,27 +155,22 @@ def query_openai(prompt):
         api_key=HF_TOKEN,
     )
 
-    # completion = client.chat.completions.create(
-    #     model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
-    #     messages=[
-    #             {
-    #                 "role": "user",
-    #                 "content": prompt
-    #             }
-    #         ],
-    # )
-    
     completion = client.chat.completions.create(
-        # model="openai/gpt-oss-120b:groq",
         model="openai/gpt-oss-20b:groq",
         messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
+            {"role": "user", "content": prompt}
         ],
     )
-    return completion.choices[0].message
+
+    msg = completion.choices[0].message
+
+    # fallback
+    if msg.content:
+        return msg.content
+    elif hasattr(msg, "reasoning"):
+        return msg.reasoning
+    else:
+        return ""
 
 def build_prompt(text):
     return f"""
