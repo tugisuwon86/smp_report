@@ -11,7 +11,6 @@ option = st.selectbox(
     "Select File Types",
     ("PDF", "Images"),
 )
-df = ''
 
 def parser(content):
 
@@ -90,7 +89,7 @@ elif option == 'PDF':
                 prompt = build_prompt(text)
                 response = query_openai(prompt)
                 # st.write(type(response))
-                st.write(response)
+                # st.write(response)
                 # try:
                 vendor, ship_to, df = parser(response)
                 st.subheader(f"📦 {uploaded_file.name}")
@@ -100,6 +99,11 @@ elif option == 'PDF':
                 st.write('Shipping Information')
                 st.write(ship_to)
 
+                if ship_to["company"] != "SMP Corporation":
+                    vendor_ = ship_to["company"]
+                else:
+                    vendor_ = vendor["company"]
+
                 st.write('Item Information')
                 st.dataframe(df)
                 # except json.JSONDecodeError:
@@ -108,7 +112,7 @@ elif option == 'PDF':
 
 # IIF generation (only if we have matched rows)
 
-if df != '' and not df.empty:
+if not df.empty:
     # Download buttons
     col1, col2, col3 = st.columns(3)
     
@@ -150,7 +154,7 @@ if df != '' and not df.empty:
         "SMP": "SMP"
     }
 
-    vendor_name = vendor_map.get(option_company, option_company)
+    vendor_name = vendor_map.get(vendor_, vendor_)
 
     # Generate files once and store
     if "po_iif" not in st.session_state:
