@@ -97,7 +97,6 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
     for r in rows:
 
         item_code = get_qb_item_code(r, qb_items)
-        st.write(r, item_code)
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
         except (ValueError, TypeError):
