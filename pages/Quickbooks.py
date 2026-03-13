@@ -11,6 +11,7 @@ option = st.selectbox(
     "Select File Types",
     ("PDF", "Images"),
 )
+df = ''
 
 def parser(content):
 
@@ -34,7 +35,7 @@ def parser(content):
 
     df = pd.DataFrame(content['items'])
     return vendor, ship_to, df
-    
+
 if option == 'Images':
     uploaded_file = st.file_uploader(
         "Upload your Image File (JPG or PNG)", 
@@ -86,29 +87,28 @@ elif option == 'PDF':
         for uploaded_file in uploaded_files:
             with st.spinner(f"Extracting data from {uploaded_file.name}..."):
                 text = extract_text_from_pdf(uploaded_file)
-                st.write(text)
                 prompt = build_prompt(text)
                 response = query_openai(prompt)
                 # st.write(type(response))
-                # st.write(response)
-                try:
-                    vendor, ship_to, df = parser(response.content)
-                    st.subheader(f"📦 {uploaded_file.name}")
-                    st.write('Vendor Information')
-                    st.write(vendor)
-    
-                    st.write('Shipping Information')
-                    st.write(ship_to)
-    
-                    st.write('Item Information')
-                    st.dataframe(df)
-                except json.JSONDecodeError:
-                    st.error("Could not parse structured JSON. Here’s the raw response:")
-                    st.text(response)
+                st.write(response)
+                # try:
+                vendor, ship_to, df = parser(response.content)
+                st.subheader(f"📦 {uploaded_file.name}")
+                st.write('Vendor Information')
+                st.write(vendor)
+
+                st.write('Shipping Information')
+                st.write(ship_to)
+
+                st.write('Item Information')
+                st.dataframe(df)
+                # except json.JSONDecodeError:
+                #     st.error("Could not parse structured JSON. Here’s the raw response:")
+                #     st.text(response)
 
 # IIF generation (only if we have matched rows)
 
-if not df.empty:
+if df != '' and not df.empty:
     # Download buttons
     col1, col2, col3 = st.columns(3)
     
