@@ -646,13 +646,17 @@ if submitted:
             if "po_iif" not in st.session_state:
                 st.session_state.po_iif = generate_purchase_order_iif(
                     matched_rows,
-                    vendor_name=vendor_name
+                    qb_items,
+                    vendor_name=vendor_name,
+                    container=True
                 )
         
             if "so_iif" not in st.session_state:
                 st.session_state.so_iif = generate_sales_order_iif(
                     matched_rows,
+                    qb_items,
                     customer_name="Default Customer"
+                    container=True
                 )
         
             with col2:
