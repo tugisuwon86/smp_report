@@ -156,7 +156,7 @@ def query_openai(prompt):
     )
 
     completion = client.chat.completions.create(
-        model="openai/gpt-oss-20b:groq",
+        model="meta-llama/Meta-Llama-3.1-70B-Instruct",
         messages=[
             {"role": "system", "content": "Return ONLY valid JSON."},
             {"role": "user", "content": prompt}
