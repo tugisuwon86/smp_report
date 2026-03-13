@@ -154,6 +154,7 @@ if not df.empty:
     qb_items, qb_vendors, qb_customers = load_qb_items()
 
     matched_rows = df.to_json(orient="records")
+    st.write(matched_rows[0])
     
     missing_items = validate_items_against_qb(matched_rows, qb_items)
 
