@@ -15,7 +15,7 @@ df = ''
 
 def parser(content):
 
-    content = json.loads(content)
+    # content = json.loads(content)
     
     vendor = {}
     ## customer level - bill/vendor
@@ -156,13 +156,17 @@ if df != '' and not df.empty:
     if "po_iif" not in st.session_state:
         st.session_state.po_iif = generate_purchase_order_iif(
             matched_rows,
-            vendor_name=vendor_name
+            qb_items,
+            vendor_name=vendor_name,
+            container=False
         )
 
     if "so_iif" not in st.session_state:
         st.session_state.so_iif = generate_sales_order_iif(
             matched_rows,
-            customer_name="Default Customer"
+            qb_items,
+            customer_name="Default Customer",
+            container=False
         )
 
     with col2:
