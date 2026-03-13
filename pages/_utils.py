@@ -65,110 +65,92 @@ def validate_items_against_qb(rows, qb_items):
 def generate_purchase_order_iif(rows, vendor_name, txn_date=None, docnum=50001):
     """
     Generate IIF content for a Purchase Order.
-    
-    Args:
-        rows: List of dicts with keys: type_code, quantity, po_unit_price, po_amount
-        vendor_name: Name of the vendor (must exist in QB)
-        txn_date: Transaction date (defaults to today)
-        docnum: Document number for the PO
-    
-    Returns:
-        String containing the IIF file content
+
+    Fix:
+    - Use INVITEM instead of ITEM
+    - INVITEM must appear before QNTY
     """
+
     if txn_date is None:
         txn_date = qb_date()
-    
+
     lines = [
         "!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tDOCNUM",
-        "!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tQNTY\tPRICE\tAMOUNT\tITEM",
+        "!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tINVITEM\tQNTY\tPRICE\tAMOUNT",
         "!ENDTRNS",
     ]
-    
-    # TRNS header line (one per PO)
+
+    # TRNS header line
     lines.append(
         f"TRNS\tPURCHORD\t{txn_date}\tAccounts Payable\t{vendor_name}\t{docnum}"
     )
-    
-    # SPL lines (one per item)
+
     for r in rows:
+
         item_code = get_qb_item_code(r)
-        
-        # Parse numeric values (handle formatted strings like "1,234.56")
+
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
         except (ValueError, TypeError):
             qty = 0
-        
+
         try:
             price = float(str(r.get("po_unit_price", 0)).replace(",", ""))
         except (ValueError, TypeError):
             price = 0
-        
+
         try:
             amount = float(str(r.get("po_amount", 0)).replace(",", ""))
         except (ValueError, TypeError):
             amount = qty * price
-        
+
         lines.append(
-            f"SPL\tPURCHORD\t{txn_date}\tInventory Asset\t{vendor_name}\t{qty}\t{price}\t{amount}\t{item_code}"
+            f"SPL\tPURCHORD\t{txn_date}\tInventory Asset\t{vendor_name}\t{item_code}\t{qty}\t{price}\t{amount}"
         )
-    
+
     lines.append("ENDTRNS")
-    
+
     return "\n".join(lines)
 
 
 def generate_sales_order_iif(rows, customer_name, txn_date=None, docnum=10001):
-    """
-    Generate IIF content for a Sales Order.
-    
-    Args:
-        rows: List of dicts with keys: type_code, quantity, pi_unit_price, pi_amount
-        customer_name: Name of the customer (must exist in QB)
-        txn_date: Transaction date (defaults to today)
-        docnum: Document number for the SO
-    
-    Returns:
-        String containing the IIF file content
-    """
+
     if txn_date is None:
         txn_date = qb_date()
-    
+
     lines = [
         "!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tDOCNUM",
         "!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tQNTY\tPRICE\tAMOUNT\tITEM",
         "!ENDTRNS",
     ]
-    
-    # TRNS header line (one per SO)
+
     lines.append(
-        f"TRNS\tSALESORD\t{txn_date}\tAccounts Receivable\t{customer_name}\t{docnum}"
+        f"TRNS\tSALESORDER\t{txn_date}\tAccounts Receivable\t{customer_name}\t{docnum}"
     )
-    
-    # SPL lines (one per item)
+
     for r in rows:
+
         item_code = get_qb_item_code(r)
-        
-        # Parse numeric values (handle formatted strings like "1,234.56")
+
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
-        except (ValueError, TypeError):
+        except:
             qty = 0
-        
+
         try:
             price = float(str(r.get("pi_unit_price", 0)).replace(",", ""))
-        except (ValueError, TypeError):
+        except:
             price = 0
-        
+
         try:
             amount = float(str(r.get("pi_amount", 0)).replace(",", ""))
-        except (ValueError, TypeError):
+        except:
             amount = qty * price
-        
+
         lines.append(
-            f"SPL\tSALESORD\t{txn_date}\tSales\t{customer_name}\t{qty}\t{price}\t{amount}\t{item_code}"
+            f"SPL\tSALESORDER\t{txn_date}\tSales\t{customer_name}\t{qty}\t{price}\t{amount}\t{item_code}"
         )
-    
+
     lines.append("ENDTRNS")
-    
+
     return "\n".join(lines)
