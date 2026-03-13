@@ -209,6 +209,7 @@ Your task is to accurately parse the text and return structured JSON output cont
    - Map fields as follows:
      - **product** → value under "Item" or "Product" column.
      - **description** → value under "Description" or "SKU" column (contains product details or identifiers). It should not contain space. It is unique identify that may have hyphen. If the string is broken by colon, only print the last element with colon delimiter.
+     - **date** -> for now just put today's date in YYYY-MM-DD format
      - **quantity** → integer quantity value (look for whole numbers).
      - **price** -> price per roll/item, often decimal or currency
      - **amount** → total price, often decimal or currency (may be missing).
@@ -245,12 +246,16 @@ Your task is to accurately parse the text and return structured JSON output cont
       "product": "",
       "description": "",
       "date": "",
-      "quantity": "",
-      "price": "",
-      "amount": ""
+      "quantity": 0,
+      "price": 0,
+      "amount": 0
     }}
   ]
 }}
+Return ONLY valid JSON.
+Do not include reasoning.
+Do not include explanation.
+Do not include markdown.
 
 ---
 
