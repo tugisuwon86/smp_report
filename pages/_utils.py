@@ -26,15 +26,21 @@ def load_qb_lists_from_iif(path):
 from datetime import datetime
 
 
-def get_qb_item_code(row):
+def get_qb_item_code(row, qb_items=[]):
     """
     Get QuickBooks item code from row.
     Prioritizes type_code (from metadata), falls back to techpia_code.
     """
+    temp = ''
     if row.get("type_code"):
-        return row["type_code"]
+        temp = row["type_code"]
     if row.get("techpia_code"):
-        return row["techpia_code"]
+        temp = row["techpia_code"]
+    if row.get("description"):
+        temp = row["description"]
+    if temp != '' and qb_items != []:
+        temp = [x for x in qb_items if temp in x]
+        return temp
     # Fallback: construct a name (may not exist in QB)
     base = f"{row.get('item', 'Unknown')} {row.get('vlt', 0)}%"
     return f"{base} {row.get('width', 0)}\""
@@ -62,7 +68,7 @@ def validate_items_against_qb(rows, qb_items):
     return missing
 
 
-def generate_purchase_order_iif(rows, vendor_name, txn_date=None, docnum=50001):
+def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, txn_date=None, docnum=50001):
     """
     Generate IIF content for a Purchase Order.
 
@@ -85,9 +91,10 @@ def generate_purchase_order_iif(rows, vendor_name, txn_date=None, docnum=50001):
         f"TRNS\tPURCHORD\t{txn_date}\tAccounts Payable\t{vendor_name}\t{docnum}"
     )
 
+    unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
     for r in rows:
 
-        item_code = get_qb_item_code(r)
+        item_code = get_qb_item_code(r, qb_items)
 
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
@@ -95,12 +102,12 @@ def generate_purchase_order_iif(rows, vendor_name, txn_date=None, docnum=50001):
             qty = 0
 
         try:
-            price = float(str(r.get("po_unit_price", 0)).replace(",", ""))
+            price = float(str(r.get(unit_price, 0)).replace(",", ""))
         except (ValueError, TypeError):
             price = 0
 
         try:
-            amount = float(str(r.get("po_amount", 0)).replace(",", ""))
+            amount = float(str(r.get(amount, 0)).replace(",", ""))
         except (ValueError, TypeError):
             amount = qty * price
 
@@ -113,7 +120,7 @@ def generate_purchase_order_iif(rows, vendor_name, txn_date=None, docnum=50001):
     return "\n".join(lines)
 
 
-def generate_sales_order_iif(rows, customer_name, txn_date=None, docnum=10001):
+def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn_date=None, docnum=10001):
 
     if txn_date is None:
         txn_date = qb_date()
@@ -127,10 +134,10 @@ def generate_sales_order_iif(rows, customer_name, txn_date=None, docnum=10001):
     lines.append(
         f"TRNS\tSALESORDER\t{txn_date}\tAccounts Receivable\t{customer_name}\t{docnum}"
     )
-
+    unit_price, amount = ["price", "pi_unit_price"][container==True], ["amount", "pi_amount"][container==True]
     for r in rows:
 
-        item_code = get_qb_item_code(r)
+        item_code = get_qb_item_code(r, qb_items)
 
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
@@ -138,12 +145,12 @@ def generate_sales_order_iif(rows, customer_name, txn_date=None, docnum=10001):
             qty = 0
 
         try:
-            price = float(str(r.get("pi_unit_price", 0)).replace(",", ""))
+            price = float(str(r.get(unit_price, 0)).replace(",", ""))
         except:
             price = 0
 
         try:
-            amount = float(str(r.get("pi_amount", 0)).replace(",", ""))
+            amount = float(str(r.get(amount, 0)).replace(",", ""))
         except:
             amount = qty * price
 
