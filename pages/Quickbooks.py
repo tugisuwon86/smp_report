@@ -92,7 +92,7 @@ elif option == 'PDF':
                 # st.write(type(response))
                 st.write(response)
                 # try:
-                vendor, ship_to, df = parser(response.content)
+                vendor, ship_to, df = parser(response)
                 st.subheader(f"📦 {uploaded_file.name}")
                 st.write('Vendor Information')
                 st.write(vendor)
