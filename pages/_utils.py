@@ -32,13 +32,13 @@ def get_qb_item_code(row, qb_items=[]):
     Prioritizes type_code (from metadata), falls back to techpia_code.
     """
     temp = ''
-    if row.get("type_code"):
+    if "type_code" in row:
         temp = row["type_code"]
-    if row.get("techpia_code"):
+    if "techpia_code" in row:
         temp = row["techpia_code"]
-    if row.get("description"):
+    if "description" in row:
         temp = row["description"]
-    st.write(row, temp, len(qb_items))
+    st.write(a)
     if temp != '' and qb_items != []:
         temp_ = [x for x in qb_items if temp in x]
         if temp_:
