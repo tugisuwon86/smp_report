@@ -2,6 +2,7 @@
 import pdfplumber
 import streamlit as st
 from io import StringIO 
+from google import genai
 
 def extract_text_from_pdf(file):
     text = ""
@@ -150,21 +151,23 @@ def convert_markdown_to_dataframe(markdown_table: str) -> pd.DataFrame:
 from openai import OpenAI
 
 def query_openai(prompt):
-    client = OpenAI(
-        base_url="https://router.huggingface.co/v1",
-        api_key=HF_TOKEN,
+    client = genai.Client(
+        api_key=st.secrets['gemini-api']['api_token'],
+        http_options=http_options
     )
+    prompt = prompt.format(data=raw_data)
 
-    completion = client.chat.completions.create(
-        model="meta-llama/Meta-Llama-3.1-70B-Instruct",
-        messages=[
-            {"role": "system", "content": "Return ONLY valid JSON."},
-            {"role": "user", "content": prompt}
-        ]
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json"
+        }
     )
-
-    msg = completion.choices[0].message
-    return msg
+    
+    rows = json.loads(response.text)
+    st.write(rows)
+    return rows
 
 def build_prompt(text):
     return f"""
