@@ -217,7 +217,7 @@ Your task is to accurately parse the text and return structured JSON output cont
      - **description** → value under "Description" or "SKU" column (contains product details or identifiers). It should not contain space. It is unique identify that may have hyphen. If the string is broken by colon, only print the last element with colon delimiter.
      - **date** -> date found from previous section (selling/contract date in YYYY-MM-DD)
      - **quantity** → integer quantity value (look for whole numbers).
-     - **price** -> price per roll/item, often decimal or currency
+     - **price** -> price per roll/item; don't use price/sqm; use net 1 unit or price/roll or similar, often decimal or currency
      - **amount** → total price, often decimal or currency (may be missing).
    - If a column is missing, leave the field as an empty string.
 
