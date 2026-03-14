@@ -84,6 +84,7 @@ Item / product rules:
 - "Film Series" or similar column represents the item/product name.
 - The item field should NOT include size, width, length, or VLT numbers.
 - Preserve original casing and wording as much as possible.
+- If any of the row has missing item, fill it with value from another row if only one unique item value is present
 
 Size normalization rules:
 - Normalize any of the following formats:
