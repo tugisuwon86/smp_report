@@ -486,14 +486,14 @@ if submitted:
             rows = json.loads(json_text)
 
             # collect unique non-empty item values
-            unique_items = {r.get("item") for r in rows if r.get("item")}
+            # unique_items = {r.get("item") for r in rows if r.get("item")}
             
-            if len(unique_items) == 1:
-                value = unique_items.pop()
+            # if len(unique_items) == 1:
+            #     value = unique_items.pop()
                 
-                for r in rows:
-                    if not r.get("item") or r.get("item").strip() == "":
-                        r["item"] = value
+            #     for r in rows:
+            #         if not r.get("item") or r.get("item").strip() == "":
+            #             r["item"] = value
             all_rows += rows
     
         df_norm = pd.DataFrame(all_rows)
