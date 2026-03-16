@@ -78,13 +78,14 @@ VLT extraction rules:
    - Example: "i-Cool Carbon 02" → vlt = 2
    - Example: "i-Cool Premium IR 15" → vlt = 15
    - Remove the VLT number from the item name after extraction.
-3. Do NOT guess VLT if it is not explicitly present.
+3. Iv VLT not found, use another column (previous) from the same row for VLT
+4. Do NOT guess VLT if it is not explicitly present.
 
 Item / product rules:
 - "Film Series" or similar column represents the item/product name.
 - The item field should NOT include size, width, length, or VLT numbers.
 - Preserve original casing and wording as much as possible.
-- If any of the row has missing item, fill it with value from another row if only one unique item value is present
+- If any of the row has missing item, fill it with value from same row (another row if only one unique item value is present)
 
 Size normalization rules:
 - Normalize any of the following formats:
