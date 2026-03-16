@@ -310,7 +310,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    debugging = True
+    debugging = False
     if debugging:
         st.write("Here processing: ", row)
     item = str(row["item"])
