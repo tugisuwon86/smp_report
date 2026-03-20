@@ -310,24 +310,27 @@ if not df.empty:
 
     output = []
     for _, row in df.iterrows():
-        meta_match, factor = best_meta_match(row, meta_df, option_company)
-        # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
-        if meta_match is not None:
-            type_code = meta_match["Type (Code)"]
-            techpia_code = meta_match["Techpia (Code)"]
-            description = meta_match["Description"]
-            pi_unit_price = float(meta_match["Price"])
-            po_unit_price = float(meta_match["PO Price"])
-            slitting = meta_match["Width Slitting"]
-            length = meta_match["Length"]
-        output.append({
-            "product": type_code,
-            "description": row["description"],
-            "vlt": row["vlt"],
-            "quantity": row["quantity"],
-            "price": row["price"],
-            "amount": row["amount"]
-        })
+        try:
+            meta_match, factor = best_meta_match(row, meta_df, option_company)
+            # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
+            if meta_match is not None:
+                type_code = meta_match["Type (Code)"]
+                techpia_code = meta_match["Techpia (Code)"]
+                description = meta_match["Description"]
+                pi_unit_price = float(meta_match["Price"])
+                po_unit_price = float(meta_match["PO Price"])
+                slitting = meta_match["Width Slitting"]
+                length = meta_match["Length"]
+            output.append({
+                "product": type_code,
+                "description": row["description"],
+                "vlt": row["vlt"],
+                "quantity": row["quantity"],
+                "price": row["price"],
+                "amount": row["amount"]
+            })
+        except:
+            st.write(row)
     df = pd.DataFrame(output)
 
     with col1:
