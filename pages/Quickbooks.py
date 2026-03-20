@@ -35,6 +35,15 @@ def download_button(data, filename, label):
     )
     st.markdown(href, unsafe_allow_html=True)
 
+from rapidfuzz import fuzz
+
+def extract_width_from_meta(desc):
+    # Example: 'Megamax 20% 40"X100' → 40
+    m = re.search(r'(\d+)\s*["]?X', desc)
+    if m:
+        return int(m.group(1))
+    return None
+    
 def best_meta_match(row, meta_df, option_company):
     debugging = False
     if debugging:
