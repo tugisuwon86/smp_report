@@ -5,6 +5,7 @@ import pandas as pd
 from utils import extract_text_from_pdf, build_prompt, query_openai, read_file_to_base64, call_gemini_api, convert_markdown_to_dataframe
 from io import StringIO 
 import base64
+import re
 
 st.set_page_config(page_title="Purchase Order Extractor", layout="wide")
 st.title("📄 Purchase Order Extractor")
