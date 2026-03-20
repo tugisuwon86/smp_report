@@ -253,6 +253,9 @@ Your task is to accurately parse the text and return structured JSON output cont
   "items": [
     {{
       "product": "",
+      "vlt": 0,
+      "width": 0,
+      "length": 0,
       "description": "",
       "date": "",
       "quantity": 0,
