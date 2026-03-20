@@ -71,10 +71,10 @@ def best_meta_match(row, meta_df, option_company):
 
     # if width = 12 
     factor = 1
-    if width_final == 12:
-        row["composition"] = "5*12"
-        width_final = 60
-        factor = 5
+    # if width_final == 12:
+    #     row["composition"] = "5*12"
+    #     width_final = 60
+    #     factor = 5
 
     # 1️⃣ Filter by matching VLT
     candidates = meta_df[meta_df["VLT"] == vlt]
@@ -309,13 +309,13 @@ if not df.empty:
     if "csv_data" not in st.session_state:
         st.session_state.csv_data = df.to_csv(index=False)
 
-    output = []
+    matched_rows = []
     for _, row in df.iterrows():
         try:
-            st.write('________________________')
-            st.write(row)
+            # st.write('________________________')
+            # st.write(row)
             meta_match, factor = best_meta_match(row, meta_df, option_company)
-            st.write(meta_match)
+            # st.write(meta_match)
             # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
@@ -325,7 +325,7 @@ if not df.empty:
                 po_unit_price = float(meta_match["PO Price"])
                 slitting = meta_match["Width Slitting"]
                 length = meta_match["Length"]
-            output.append({
+            matched_rows.append({
                 "description": type_code,
                 "product": row["description"],
                 "vlt": row["vlt"],
@@ -335,7 +335,7 @@ if not df.empty:
             })
         except:
             st.write(row)
-    df = pd.DataFrame(output)
+    df = pd.DataFrame(matched_rows)
 
     with col1:
         download_button(
