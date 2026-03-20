@@ -10,7 +10,7 @@ st.set_page_config(page_title="Purchase Order Extractor", layout="wide")
 st.title("📄 Purchase Order Extractor")
 option = st.selectbox(
     "Select File Types",
-    ("PDF", "Images"),
+    ("PDF", "Images", "Excel"),
 )
 
 def download_button(data, filename, label):
@@ -100,32 +100,63 @@ if option == 'Images':
 elif option == 'PDF':
     uploaded_files = st.file_uploader("Upload one or more PDF purchase orders", type=["pdf"], accept_multiple_files=True)
     if uploaded_files:
-        for uploaded_file in uploaded_files:
-            with st.spinner(f"Extracting data from {uploaded_file.name}..."):
-                text = extract_text_from_pdf(uploaded_file)
-                prompt = build_prompt(text)
-                response = query_openai(prompt)
-                # st.write(type(response))
-                # st.write(response)
-                # try:
-                vendor, ship_to, df = parser(response)
-                st.subheader(f"📦 {uploaded_file.name}")
-                st.write('Vendor Information')
-                st.write(vendor)
+        if st.button("Process PDF", type="primary"):
+            for uploaded_file in uploaded_files:
+                with st.spinner(f"Extracting data from {uploaded_file.name}..."):
+                    text = extract_text_from_pdf(uploaded_file)
+                    prompt = build_prompt(text)
+                    response = query_openai(prompt)
+                    # st.write(type(response))
+                    # st.write(response)
+                    # try:
+                    vendor, ship_to, df = parser(response)
+                    st.subheader(f"📦 {uploaded_file.name}")
+                    st.write('Vendor Information')
+                    st.write(vendor)
+    
+                    st.write('Shipping Information')
+                    st.write(ship_to)
+    
+                    if ship_to["company"] != "SMP Corporation":
+                        vendor_ = ship_to["company"]
+                    else:
+                        vendor_ = vendor["company"]
+    
+                    st.write('Item Information')
+                    st.dataframe(df)
+                    # except json.JSONDecodeError:
+                    #     st.error("Could not parse structured JSON. Here’s the raw response:")
+                    #     st.text(response)
+elif option == 'Excel':
+    uploaded_file = st.file_uploader(
+        "Upload your Excel File", 
+        type=["xlsx", "xls"]
+    )
 
-                st.write('Shipping Information')
-                st.write(ship_to)
+    if uploaded_file is not None:
+        # Load Excel file
+        xls = pd.ExcelFile(uploaded_file)
+        sheet_names = xls.sheet_names
 
-                if ship_to["company"] != "SMP Corporation":
-                    vendor_ = ship_to["company"]
-                else:
-                    vendor_ = vendor["company"]
+        selected_sheet = st.selectbox(
+            "Select Sheet",
+            sheet_names
+        )
 
-                st.write('Item Information')
-                st.dataframe(df)
-                # except json.JSONDecodeError:
-                #     st.error("Could not parse structured JSON. Here’s the raw response:")
-                #     st.text(response)
+        if st.button("Process Excel", type="primary"):
+            with st.spinner("Processing Excel file..."):
+                try:
+                    df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+
+                    st.success("Excel Loaded Successfully!")
+                    st.subheader("Preview")
+                    st.dataframe(df)
+
+                    # Save to session state
+                    st.session_state.df = df
+
+                except Exception as e:
+                    st.error(f"Error processing Excel: {e}")
 
 # IIF generation (only if we have matched rows)
 
