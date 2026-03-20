@@ -39,7 +39,8 @@ def best_meta_match(row, meta_df, option_company):
     debugging = False
     if debugging:
         st.write("Here processing: ", row)
-    item = str(row["item"])
+    row["composition"] = "nan"
+    item = str(row["product"] + ' ' + row["description"])
     if option_company == "Hitek":
         if 'ceramic ir' in item.lower():
             item += ' PREMIUM'
@@ -150,6 +151,10 @@ def parser(content):
     df = pd.DataFrame(content['items'])
     return vendor, ship_to, df
 
+option_company = st.selectbox(
+    "Company Name: ",
+    ("Geoshield", "Hitek", "UVIRON", "SMP")
+)
 if option == 'Images':
     uploaded_file = st.file_uploader(
         "Upload your Image File (JPG or PNG)", 
@@ -277,9 +282,27 @@ if not df.empty:
     # Download buttons
     col1, col2, col3 = st.columns(3)
     
+    @st.cache_data
+    def load_meta(option_company):
+        df = pd.read_excel("pages/CNT Data.xlsx", sheet_name="Sheet1", header=[0, 1])
+        columns = list(df.columns[:9]) + [x for x in df.columns[9:] if option_company in x]
+        column_names = [x[0] for x in df.columns[:9]] + [x[1] for x in df.columns[9:] if option_company in x]
+                # flatten multi-level columns
+        df_all = df[columns]
+        df_all.columns = column_names
+        return df_all.dropna(subset=['Description'])
+
+    meta_df = load_meta(option_company)
+    
     # Prepare CSV once
     if "csv_data" not in st.session_state:
         st.session_state.csv_data = df.to_csv(index=False)
+
+    output = []
+    for _, row in df.iterrows():
+        meta_match, factor = best_meta_match(r, meta_df, option_company)
+        product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
+        code = 
 
     with col1:
         download_button(
