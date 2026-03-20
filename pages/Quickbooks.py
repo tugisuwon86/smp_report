@@ -165,6 +165,7 @@ option_company = st.selectbox(
     "Company Name: ",
     ("Geoshield", "Hitek", "UVIRON", "SMP")
 )
+df = pd.DataFrame()
 if option == 'Images':
     uploaded_file = st.file_uploader(
         "Upload your Image File (JPG or PNG)", 
@@ -322,8 +323,8 @@ if not df.empty:
                 slitting = meta_match["Width Slitting"]
                 length = meta_match["Length"]
             output.append({
-                "product": type_code,
-                "description": row["description"],
+                "description": type_code,
+                "product": row["description"],
                 "vlt": row["vlt"],
                 "quantity": row["quantity"],
                 "price": row["price"],
