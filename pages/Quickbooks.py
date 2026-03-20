@@ -320,7 +320,7 @@ if not df.empty:
             po_unit_price = float(meta_match["PO Price"])
             slitting = meta_match["Width Slitting"]
             length = meta_match["Length"]
-        matched_rows.append({
+        output.append({
             "product": type_code,
             "description": row["description"],
             "vlt": row["vlt"],
@@ -328,6 +328,7 @@ if not df.empty:
             "price": row["price"],
             "amount": row["amount"]
         })
+    df = pd.DataFrame(output)
 
     with col1:
         download_button(
