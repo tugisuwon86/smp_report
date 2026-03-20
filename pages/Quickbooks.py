@@ -13,6 +13,12 @@ option = st.selectbox(
     ("PDF", "Images", "Excel"),
 )
 
+def excel_to_text(df):
+    """
+    Convert dataframe to structured text for LLM
+    """
+    return df.to_csv(index=False)
+
 def download_button(data, filename, label):
     if isinstance(data, str):
         data = data.encode()
@@ -148,12 +154,27 @@ elif option == 'Excel':
                 try:
                     df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
 
-                    st.success("Excel Loaded Successfully!")
-                    st.subheader("Preview")
+                    text = excel_to_text(df)
+                    prompt = build_prompt(text)
+                    response = query_openai(prompt)
+                    # st.write(type(response))
+                    # st.write(response)
+                    # try:
+                    vendor, ship_to, df = parser(response)
+                    st.subheader(f"📦 {uploaded_file.name}")
+                    st.write('Vendor Information')
+                    st.write(vendor)
+    
+                    st.write('Shipping Information')
+                    st.write(ship_to)
+    
+                    if ship_to["company"] != "SMP Corporation":
+                        vendor_ = ship_to["company"]
+                    else:
+                        vendor_ = vendor["company"]
+    
+                    st.write('Item Information')
                     st.dataframe(df)
-
-                    # Save to session state
-                    st.session_state.df = df
 
                 except Exception as e:
                     st.error(f"Error processing Excel: {e}")
