@@ -214,6 +214,9 @@ Your task is to accurately parse the text and return structured JSON output cont
    - Never merge or concatenate information from multiple rows or across columns.
    - Map fields as follows:
      - **product** → value under "Item" or "Product" column.
+     - **vlt** → value under "VLT"; otherwise, it can be found under "Item" or "Product" column with %. Capture the number in front of %
+     - **width** -> value under "width"; otherwise, it can be found under "Item" or "Product" column XX" x XXX' format. Capture the number in front of "
+     - **length** -> value under "length"; otherwise, it can be found under "Item" or "Product" column XX" x XXX' format. Capture the number in front of '
      - **description** → value under "Description" or "SKU" column (contains product details or identifiers). It should not contain space. It is unique identify that may have hyphen. If the string is broken by colon, only print the last element with colon delimiter.
      - **date** -> date found from previous section (selling/contract date in YYYY-MM-DD)
      - **quantity** → integer quantity value (look for whole numbers).
