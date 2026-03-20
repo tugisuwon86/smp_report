@@ -35,6 +35,98 @@ def download_button(data, filename, label):
     )
     st.markdown(href, unsafe_allow_html=True)
 
+def best_meta_match(row, meta_df, option_company):
+    debugging = False
+    if debugging:
+        st.write("Here processing: ", row)
+    item = str(row["item"])
+    if option_company == "Hitek":
+        if 'ceramic ir' in item.lower():
+            item += ' PREMIUM'
+        elif 'plus' in item.lower() and 'ceramic' in item.lower():
+            item += ' ALPHA'
+        
+    try:
+        vlt = float(str(row["vlt"]).strip().replace('%', ''))
+    except:
+        if option_company == 'Geoshield':
+            vlt = 'PPF'
+            item += ' PPF'
+        else:
+            vlt = 0
+    if option_company == 'Geoshield' and vlt == 75:
+        vlt = 70 # just for geoshield
+    width_final = int(row["width"])
+
+    # if width = 12 
+    factor = 1
+    if width_final == 12:
+        row["composition"] = "5*12"
+        width_final = 60
+        factor = 5
+
+    # 1️⃣ Filter by matching VLT
+    candidates = meta_df[meta_df["VLT"] == vlt]
+    if candidates.shape[0] == 0:
+        candidates = meta_df.copy()
+
+    candidates["compare"] = candidates[["QB Description", "Width"]].apply(lambda x: str(x[0]) + ' ' + str(x[1]), axis=1)
+    candidates = candidates[candidates["compare"].str.contains(str(width_final))]
+    # st.dataframe(candidates.head(2))
+    if candidates.empty:
+        return None
+
+    best_score = -1
+    best_row = None
+
+    # force width to be 60 if composition exists!
+    if str(row["composition"]) != 'nan' and ('/' in str(row["composition"]) or '*' in str(row["composition"])):
+        row["width"] = 60
+    if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
+        row["composition"] = 'nan'
+        
+    for _, m in candidates.iterrows():
+        # make sure slitting/composition is found under width slitting
+        if str(row["composition"]) != 'nan' and str(row["composition"]) not in str(m["Width Slitting"]):
+            # st.write('composition not found :', row["composition"], m["Width Slitting"])
+            continue
+        # make sure the width match!
+        if str(row["width"])+"\"" not in m["QB Description"]:
+            continue
+        if debugging:
+            st.write("description value: ", m["QB Description"], m["Description"], item, any([x.lower() in m["QB Description"].lower() for x in item.split()]))
+        if any([x.lower() in m["QB Description"].lower() for x in item.split()]) or any([x.lower() in m["Description"].lower() for x in item.split()]):
+            total_score = -1
+            multiplier = sum([[0,1][x.lower() in m["QB Description"].lower() or x.lower() in m["Description"]] for x in item.split()])
+            # if factor != 1:
+            #     st.write('special case: ', m["Width"], row["composition"], ('/' in str(m["Width"]) or '*' in str(m["Width"])), str(row["composition"]) != 'nan', (str(row["composition"]) != 'nan' and ('/' in str(m["Width"]) or '*' in str(m["Width"]))))
+            if (str(row["composition"]) == 'nan' and '/' not in str(m["Width"])) or (str(row["composition"]) != 'nan' and ('/' in str(m["Width Slitting"]) or '*' in str(m["Width Slitting"]))):
+                meta_width = extract_width_from_meta(m["Description"])
+                #st.write('meta_width: ', meta_width)
+                # 2️⃣ Width match (only when width_final < 60)
+                if width_final == 'PPF' and width_final in m["Description"]:
+                    width_score = 100
+                elif width_final < 60 and meta_width == width_final:
+                    width_score = 100
+                else:
+                    width_score = 0
+
+    
+                # 3️⃣ Fuzzy match on item name
+                # score1 = fuzz.token_set_ratio(item, m["description"])
+                score1 = max(fuzz.token_set_ratio(str(row["composition"]), str(m["Width"])), fuzz.token_set_ratio(str(row["composition"]), str(m["QB Description"])))
+                score2 = max(fuzz.token_set_ratio(item, m["QB Description"]), fuzz.token_set_ratio(item, m["Description"]))
+                item_score = score1 + score2
+                total_score = width_score + item_score * multiplier
+                if debugging:
+                    st.write(width_score, item_score, total_score)
+            if total_score > best_score:
+                # st.write(item, m["Width"], m["Description"], total_score)
+                best_score = total_score
+                best_row = m
+
+    return best_row, factor
+
 def parser(content):
 
     # content = json.loads(content)
