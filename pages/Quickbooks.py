@@ -312,7 +312,10 @@ if not df.empty:
     output = []
     for _, row in df.iterrows():
         try:
+            st.write('________________________')
+            st.write(row)
             meta_match, factor = best_meta_match(row, meta_df, option_company)
+            st.write(meta_match)
             # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
