@@ -159,7 +159,7 @@ def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn
             price = 0
 
         try:
-            amount = float(str(r[amount])).replace(",", ""))
+            amount = float(str(r[amount]).replace(",", ""))
         except:
             amount = qty * price
 
