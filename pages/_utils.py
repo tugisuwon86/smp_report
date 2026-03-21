@@ -96,7 +96,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
         f"TRNS\tPURCHORD\t{txn_date}\tAccounts Payable\t{vendor_name}\t{docnum}"
     )
 
-    unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
+    unit_price, amount_ = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
     for r in rows:
         
         item_code = get_qb_item_code(r, qb_items)
@@ -111,7 +111,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
             price = 0
 
         try:
-            amount = float(str(r[amount]).replace(",", ""))
+            amount = float(str(r[amount_]).replace(",", ""))
         except (ValueError, TypeError):
             amount = qty * price
 
@@ -143,7 +143,7 @@ def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn
     lines.append(
         f"TRNS\tSALESORDER\t{txn_date}\tAccounts Receivable\t{customer_name}\t{docnum}"
     )
-    unit_price, amount = ["price", "pi_unit_price"][container==True], ["amount", "pi_amount"][container==True]
+    unit_price, amount_ = ["price", "pi_unit_price"][container==True], ["amount", "pi_amount"][container==True]
     for r in rows:
 
         item_code = get_qb_item_code(r, qb_items)
@@ -159,7 +159,7 @@ def generate_sales_order_iif(rows, qb_items, customer_name, container=False, txn
             price = 0
 
         try:
-            amount = float(str(r[amount]).replace(",", ""))
+            amount = float(str(r[amount_]).replace(",", ""))
         except:
             amount = qty * price
 
