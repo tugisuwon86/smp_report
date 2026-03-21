@@ -312,10 +312,8 @@ if not df.empty:
     matched_rows = []
     for _, row in df.iterrows():
         try:
-            # st.write('________________________')
-            # st.write(row)
             meta_match, factor = best_meta_match(row, meta_df, option_company)
-            # st.write(meta_match)
+            st.write(row["quantity"], row["amount"])
             # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
@@ -336,6 +334,7 @@ if not df.empty:
         except:
             st.write(row)
     df = pd.DataFrame(matched_rows)
+    st.dataframe(df.head(10))
 
     with col1:
         download_button(
@@ -358,7 +357,7 @@ if not df.empty:
     qb_items, qb_vendors, qb_customers = load_qb_items()
 
     matched_rows = json.loads(df.to_json(orient="records"))
-    st.write(matched_rows[0])
+    st.write(matched_rows[:2])
     
     missing_items = validate_items_against_qb(matched_rows, qb_items)
     
