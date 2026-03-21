@@ -401,12 +401,13 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
             price = float(str(r.get(unit_price, 0)).replace(",", ""))
         except (ValueError, TypeError):
             price = 0
-        st.write(r.get(amount))
-        amount = float(str(r.get(amount)).replace(",", ""))
-        # try:
-        #     amount = float(str(r.get(amount, 0)).replace(",", ""))
-        # except (ValueError, TypeError):
-        #     amount = qty * price
+            
+        st.write(r["amount"], list(r.keys()))
+        # amount = float(str(r.get(amount)).replace(",", ""))
+        try:
+            amount = float(str(r.get(amount, 0)).replace(",", ""))
+        except (ValueError, TypeError):
+            amount = qty * price
 
         try:
             date = date_Format_convert(str(r.get("date", 0)).replace(",", ""))
@@ -494,8 +495,6 @@ if not df.empty:
     for _, row in df.iterrows():
         try:
             meta_match, factor = best_meta_match(row, meta_df, option_company)
-            st.write(row["quantity"], row["amount"])
-            # product, vlt, width, length, date, quantity, price, amount = row["product"], row["vlt"], row["width"], row["length"], row["date"], row["quantity"], row["price"], row["amount"]
             if meta_match is not None:
                 type_code = meta_match["Type (Code)"]
                 techpia_code = meta_match["Techpia (Code)"]
@@ -538,7 +537,6 @@ if not df.empty:
     qb_items, qb_vendors, qb_customers = load_qb_items()
 
     matched_rows = json.loads(df.to_json(orient="records"))
-    st.write(matched_rows[:2])
     
     missing_items = validate_items_against_qb(matched_rows, qb_items)
     
