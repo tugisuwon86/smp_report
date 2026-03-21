@@ -377,7 +377,7 @@ if not df.empty:
         "UVIRON": "UVIRON",
         "SMP": "SMP"
     }
-
+    st.write("vendor: ', vendor_)
     vendor_name = vendor_map.get(vendor_, vendor_)
 
     # Generate files once and store
