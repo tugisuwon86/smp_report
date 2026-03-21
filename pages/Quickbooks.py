@@ -388,6 +388,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
     )
 
     unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
+    st.write(unit_price, amount)
     for r in rows:
         st.write(r)
         item_code = get_qb_item_code(r, qb_items)
@@ -400,7 +401,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
             price = float(str(r.get(unit_price, 0)).replace(",", ""))
         except (ValueError, TypeError):
             price = 0
-
+        st.write(r.get(amount))
         amount = float(str(r.get(amount)).replace(",", ""))
         # try:
         #     amount = float(str(r.get(amount, 0)).replace(",", ""))
