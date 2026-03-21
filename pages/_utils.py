@@ -98,7 +98,7 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
 
     unit_price, amount = ["price", "po_unit_price"][container==True], ["amount", "po_amount"][container==True]
     for r in rows:
-
+        
         item_code = get_qb_item_code(r, qb_items)
         try:
             qty = float(str(r.get("quantity", 0)).replace(",", ""))
@@ -110,10 +110,11 @@ def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, tx
         except (ValueError, TypeError):
             price = 0
 
-        try:
-            amount = float(str(r.get(amount, 0)).replace(",", ""))
-        except (ValueError, TypeError):
-            amount = qty * price
+        amount = float(str(r.get(amount)).replace(",", ""))
+        # try:
+        #     amount = float(str(r.get(amount, 0)).replace(",", ""))
+        # except (ValueError, TypeError):
+        #     amount = qty * price
 
         try:
             date = date_Format_convert(str(r.get("date", 0)).replace(",", ""))
