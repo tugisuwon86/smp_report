@@ -360,6 +360,8 @@ def best_meta_match(row, meta_df, option_company):
         row["width"] = 60
     if str(row["composition"]) != 'nan' and '/' not in str(row["composition"]) and '*' not in str(row["composition"]):
         row["composition"] = 'nan'
+    if str(row["composition"]) == "12/12/12/12/12":
+        row["composition"] = "5*12"
         
     for _, m in candidates.iterrows():
         # make sure slitting/composition is found under width slitting
