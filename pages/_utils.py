@@ -33,11 +33,11 @@ def get_qb_item_code(row, qb_items=[]):
     """
     temp = ''
     if "type_code" in row:
-        temp = row["type_code"]
+        temp = row["type_code"].strip()
     elif "techpia_code" in row:
-        temp = row["techpia_code"]
+        temp = row["techpia_code"].strip()
     elif "description" in row:
-        temp = row["description"]
+        temp = row["description"].strip()
     if temp != '' and qb_items != []:
         temp_ = [x for x in qb_items if temp in x]
         if temp_:
