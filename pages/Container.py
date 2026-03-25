@@ -65,6 +65,7 @@ Required output fields:
 Composition (combination) extraction rules:
 1. If the source explicitly provides a width split, extract it in descreasing order (always):
    - Examples:
+     - "60 (5*12)" → composition = [12, 12, 12, 12, 12]
      - "60 (36/24)" → composition = [36, 24]
      - "36/24" → composition = [36, 24]
      - "24/36" → composition = [36, 24]
@@ -92,6 +93,7 @@ Size normalization rules:
   - 40x100, 20x100
   - 36/24 inside parentheses
   - 60 (36/24)
+  - 60 (5*!2)
   - 12, 20, 24, 36, 40 alone
   - X" x Y', X"XY', or similar formats
 - Extract:
