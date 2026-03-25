@@ -44,7 +44,8 @@ def get_qb_item_code(row, qb_items=[]):
             return temp_[0]
     # Fallback: construct a name (may not exist in QB)
     base = f"{row.get('item', 'Unknown')} {row.get('vlt', 0)}%"
-    return f"{base} {row.get('width', 0)}\""
+    # return f"{base} {row.get('width', 0)}\""
+    return 'B-' + temp
 
 
 def qb_date(d=None):
