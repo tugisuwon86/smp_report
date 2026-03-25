@@ -671,7 +671,7 @@ if submitted:
                 st.session_state.so_iif = generate_sales_order_iif(
                     matched_rows,
                     qb_items,
-                    customer_name="Default Customer",
+                    customer_name=vendor_name,
                     container=True
                 )
         
