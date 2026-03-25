@@ -657,10 +657,6 @@ if submitted:
         
             vendor_name = vendor_map.get(option_company, option_company)
             st.write('vendor name: ', vendor_name)
-
-            for r in matched_rows:
-                item_code = get_qb_item_code(r, qb_items)
-                st.write(r["type_code"], item_code)
         
             # Generate files once and store
             if "po_iif" not in st.session_state:
