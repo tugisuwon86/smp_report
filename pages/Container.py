@@ -645,6 +645,7 @@ if submitted:
                     + "\n".join(missing_items[:5])
                     + (f"\n... and {len(missing_items)-5} more" if len(missing_items) > 5 else "")
                 )
+                st.write("\n".join(missing_items))
             else:
                 st.success("✅ All items validated against QuickBooks.")
         
