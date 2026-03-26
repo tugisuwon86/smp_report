@@ -663,7 +663,7 @@ if submitted:
                 st.session_state.po_iif = generate_purchase_order_iif(
                     matched_rows,
                     qb_items,
-                    vendor_name="Techpia Product",
+                    vendor_name="\"Techpia Co, Ltd\"",
                     container=True
                 )
         
