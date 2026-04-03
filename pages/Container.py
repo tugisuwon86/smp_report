@@ -700,7 +700,7 @@ if submitted:
                     customer_name=vendor_name,
                     docnum="SO-1001"
                 )
-            if "so_csv" not in st.session_state:
+            if "po_csv" not in st.session_state:
                 st.session_state.po_csv = generate_purchase_order_csv(
                     rows=matched_rows,
                     qb_items=qb_items,
