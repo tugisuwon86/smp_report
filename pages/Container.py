@@ -9,6 +9,10 @@ from google import genai
 import numpy as np
 
 import base64
+
+def export_csv(df, filename):
+    df.to_csv(filename, index=False)
+    return filename
     
 def download_button(data, filename, label):
     if isinstance(data, str):
@@ -612,7 +616,7 @@ if submitted:
             st.session_state.downloads_ready = False
 
         # Download buttons
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         # Prepare CSV once
         if "csv_data" not in st.session_state:
@@ -688,4 +692,32 @@ if submitted:
                     st.session_state.so_iif,
                     f"sales_order_{option_company}.iif",
                     "Download SO (.iif)"
+                )
+            if "so_csv" not in st.session_state:
+                st.session_state.so_csv = generate_sales_order_csv(
+                    rows=matched_rows,
+                    qb_items=qb_items,
+                    customer_name=vendor_name,
+                    docnum="SO-1001"
+                )
+            if "so_csv" not in st.session_state:
+                st.session_state.po_csv = generate_purchase_order_csv(
+                    rows=matched_rows,
+                    qb_items=qb_items,
+                    vendor_name="\"Techpia Co, Ltd\"",
+                    docnum="PO-2001"
+                )
+
+            with col4:
+                download_button(
+                    st.session_state.po_csv.to_csv(index=False),
+                    f"purhcase_order_{option_company}.csv",
+                    "Download PO (.csv)"
+                )
+
+            with col5:
+                download_button(
+                    st.session_state.so_csv.to_csv(index=False),
+                    f"sales_order_{option_company}.csv",
+                    "Download SO (.csv)"
                 )
