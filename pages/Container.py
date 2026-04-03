@@ -632,7 +632,7 @@ if submitted:
         # IIF generation (only if we have matched rows)
         if not df_join.empty:
         
-            from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
+            from pages._utils import *
         
             @st.cache_data
             def load_qb_items():
