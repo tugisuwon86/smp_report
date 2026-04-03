@@ -74,6 +74,106 @@ def validate_items_against_qb(rows, qb_items):
             missing.append(f"{code} ({r.get('description', 'No description')})")
     return missing
 
+import pandas as pd
+
+def generate_purchase_order_csv(rows, qb_items, vendor_name,
+                                container=False, txn_date=None, docnum=50001):
+
+    if txn_date is None:
+        txn_date = qb_date()
+
+    unit_price_key = "po_unit_price" if container else "price"
+    amount_key = "po_amount" if container else "amount"
+
+    records = []
+
+    for r in rows:
+
+        item_code = get_qb_item_code(r, qb_items)
+
+        try:
+            qty = float(str(r.get("quantity", 0)).replace(",", ""))
+        except:
+            qty = 0
+
+        try:
+            price = float(str(r.get(unit_price_key, 0)).replace(",", ""))
+        except:
+            price = 0
+
+        try:
+            amount = float(str(r.get(amount_key, 0)).replace(",", ""))
+        except:
+            amount = qty * price
+
+        try:
+            date = date_Format_convert(str(r.get("date", "")))
+        except:
+            date = txn_date
+
+        records.append({
+            "Vendor": vendor_name,
+            "TxnDate": date,
+            "RefNumber": docnum,
+            "Item": item_code,
+            "Quantity": qty,
+            "Rate": price,
+            "Amount": amount,
+            "Account": "Inventory Asset"   # mirrors your IIF
+        })
+
+    df = pd.DataFrame(records)
+    return df
+
+def generate_sales_order_csv(rows, qb_items, customer_name,
+                             container=False, txn_date=None, docnum=10001):
+
+    if txn_date is None:
+        txn_date = qb_date()
+
+    unit_price_key = "pi_unit_price" if container else "price"
+    amount_key = "pi_amount" if container else "amount"
+
+    records = []
+
+    for r in rows:
+
+        item_code = get_qb_item_code(r, qb_items)
+
+        try:
+            qty = float(str(r.get("quantity", 0)).replace(",", ""))
+        except:
+            qty = 0
+
+        try:
+            price = float(str(r.get(unit_price_key, 0)).replace(",", ""))
+        except:
+            price = 0
+
+        try:
+            amount = float(str(r.get(amount_key, 0)).replace(",", ""))
+        except:
+            amount = qty * price
+
+        try:
+            date = date_Format_convert(str(r.get("date", "")))
+        except:
+            date = txn_date
+
+        records.append({
+            "Customer": customer_name,
+            "TxnDate": date,
+            "RefNumber": docnum,
+            "Item": item_code,
+            "Quantity": qty,
+            "Rate": price,
+            "Amount": amount,
+            "Account": "Sales"   # mirrors your IIF
+        })
+
+    df = pd.DataFrame(records)
+    return df
+
 def generate_purchase_order_iif(rows, qb_items, vendor_name, container=False, txn_date=None, docnum=50001):
     """
     Generate IIF content for a Purchase Order.
