@@ -59,7 +59,7 @@ Each JSON object represents ONE row with the following fields:
 Required output fields:
 - item: full product / film name WITHOUT VLT number
 - series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
-- vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
+- vlt: VLT percentage as an integer (e.g., 2, 5, 15); rarely append it to item if string (GC, GB, MC, MB) and mark vlt as ""; If not available, use ""
 - width: total width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
