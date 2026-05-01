@@ -550,6 +550,7 @@ if submitted:
                 })
     
         df_final = pd.DataFrame(final_rows)
+        st.dataframe(df_final.head(2))
         # only process row with quantity > 0
         df_final = df_final[df_final['qty'] > 0]
         st.write('consolidated')
