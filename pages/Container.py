@@ -138,30 +138,44 @@ def extract_text_from_msg(uploaded_file):
 # ----------------------------
 # Width extraction
 # ----------------------------
+import re
+
 def parse_size(text):
     if not text:
-        return None, None, None
+        return None, 100, None  # default length
 
-    t = str(text)
+    t = str(text).upper().strip()
 
-    # "60 (36/24)" or "60 (24/12/12/12)"
+    # --- CASE: CUT X/Y ---
+    m = re.search(r'CUT\s*(?P<parts>[\d/\s,]+)', t)
+    if m:
+        parts = [int(x) for x in re.split(r"[,/]", m.group("parts")) if x.strip().isdigit()]
+        if parts:
+            return sum(parts), 100, parts  # width = sum, default length
+
+    # --- CASE: "60 (36/24)" or "60 (24/12/12/12)" ---
     m = re.search(r'(?P<w>\d+)\s*\((?P<parts>[\d/\s,]+)\)', t)
     if m:
         width = int(m.group("w"))
         parts = [int(x) for x in re.split(r"[,/]", m.group("parts")) if x.strip().isdigit()]
-        return width, None, parts
+        return width, 100, parts  # default length
 
-    # "40x100"
+    # --- CASE: "40x100" ---
     m = re.search(r'(?P<w>\d+)\s*[xX]\s*(?P<l>\d+)', t)
     if m:
         return int(m.group("w")), int(m.group("l")), None
 
-    # single width like 12, 20, 24 etc.
+    # --- CASE: "40\"" or '40"' ---
+    m = re.search(r'(?P<w>\d+)\s*"', t)
+    if m:
+        return int(m.group("w")), 100, None
+
+    # --- CASE: single number like 12, 20, etc. ---
     m = re.search(r'(?P<w>\d+)', t)
     if m:
-        return int(m.group("w")), None, None
+        return int(m.group("w")), 100, None
 
-    return None, None, None
+    return None, 100, None
 
 
 # ================================================
