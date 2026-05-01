@@ -537,7 +537,7 @@ if submitted:
         # STEP 4: consolidate width sum to 60
         final_rows = []
     
-        for (item, vlt), group in df_norm.groupby(["item", "vlt", "length"]):
+        for (item, vlt, length), group in df_norm.groupby(["item", "vlt", "length"]):
             out = consolidate_group(group)
             for r in out:
                 final_rows.append({
@@ -545,7 +545,7 @@ if submitted:
                     "vlt": vlt,
                     "composition": r["composition"],
                     "width": r["width_final"],
-                    "length": r["length"],
+                    "length": length,
                     "qty": r["qty"]
                 })
     
