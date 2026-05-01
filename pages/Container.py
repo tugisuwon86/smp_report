@@ -57,7 +57,7 @@ Given extracted vendor table text (from Excel, PDF, or image), return a JSON arr
 Each JSON object represents ONE row with the following fields:
 
 Required output fields:
-- item: full product / film name WITHOUT VLT number
+- item: full product / film name WITHOUT VLT number. if this seems to be missing, use the item name from another row only if item name is unique
 - series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
 - vlt: VLT percentage as an integer (e.g., 2, 5, 15); rarely append it to item if string (GC, GB, MC, MB) and mark vlt as ""; If not available, use ""
 - width: total width in inches (integer)
@@ -170,6 +170,7 @@ def parse_size(text):
 PRIORITY_COMBOS = [
     [40, 20],
     [36, 24],
+    [36, 12, 12],
     [24, 12, 12, 12],
     [20, 20, 20],
     [12, 12, 12, 12, 12, 12],
@@ -536,7 +537,7 @@ if submitted:
         # STEP 4: consolidate width sum to 60
         final_rows = []
     
-        for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
+        for (item, vlt), group in df_norm.groupby(["item", "vlt", "length"]):
             out = consolidate_group(group)
             for r in out:
                 final_rows.append({
