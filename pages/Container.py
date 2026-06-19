@@ -57,9 +57,9 @@ Given extracted vendor table text (from Excel, PDF, or image), return a JSON arr
 Each JSON object represents ONE row with the following fields:
 
 Required output fields:
-- item: full product / film name WITHOUT VLT number
+- item: full product / film name WITHOUT VLT number. if this seems to be missing, use the item name from another row only if item name is unique
 - series: product series or family name if identifiable (e.g., Carbon, Premium IR), else ""
-- vlt: VLT percentage as an integer (e.g., 2, 5, 15). If not available, use ""
+- vlt: VLT percentage as an integer (e.g., 2, 5, 15); rarely append it to item if string (GC, GB, MC, MB) and mark vlt as ""; If not available, use ""
 - width: total width in inches (integer)
 - length: length in feet (integer)
 - qty: quantity of rolls (integer)
@@ -138,30 +138,44 @@ def extract_text_from_msg(uploaded_file):
 # ----------------------------
 # Width extraction
 # ----------------------------
+import re
+
 def parse_size(text):
     if not text:
-        return None, None, None
+        return None, 100, None  # default length
 
-    t = str(text)
+    t = str(text).upper().strip()
 
-    # "60 (36/24)" or "60 (24/12/12/12)"
+    # --- CASE: CUT X/Y ---
+    m = re.search(r'CUT\s*(?P<parts>[\d/\s,]+)', t)
+    if m:
+        parts = [int(x) for x in re.split(r"[,/]", m.group("parts")) if x.strip().isdigit()]
+        if parts:
+            return sum(parts), 100, parts  # width = sum, default length
+
+    # --- CASE: "60 (36/24)" or "60 (24/12/12/12)" ---
     m = re.search(r'(?P<w>\d+)\s*\((?P<parts>[\d/\s,]+)\)', t)
     if m:
         width = int(m.group("w"))
         parts = [int(x) for x in re.split(r"[,/]", m.group("parts")) if x.strip().isdigit()]
-        return width, None, parts
+        return width, 100, parts  # default length
 
-    # "40x100"
+    # --- CASE: "40x100" ---
     m = re.search(r'(?P<w>\d+)\s*[xX]\s*(?P<l>\d+)', t)
     if m:
         return int(m.group("w")), int(m.group("l")), None
 
-    # single width like 12, 20, 24 etc.
+    # --- CASE: "40\"" or '40"' ---
+    m = re.search(r'(?P<w>\d+)\s*"', t)
+    if m:
+        return int(m.group("w")), 100, None
+
+    # --- CASE: single number like 12, 20, etc. ---
     m = re.search(r'(?P<w>\d+)', t)
     if m:
-        return int(m.group("w")), None, None
+        return int(m.group("w")), 100, None
 
-    return None, None, None
+    return None, 100, None
 
 
 # ================================================
@@ -170,6 +184,7 @@ def parse_size(text):
 PRIORITY_COMBOS = [
     [40, 20],
     [36, 24],
+    [36, 12, 12],
     [24, 12, 12, 12],
     [20, 20, 20],
     [12, 12, 12, 12, 12, 12],
@@ -508,9 +523,9 @@ if submitted:
     
         df_norm = pd.DataFrame(all_rows)
         df_norm["item"] = df_norm["item"].ffill()
-        df_norm['width'] = df_norm['width'].fillna(method='ffill')
+        df_norm['width'] = df_norm['width'].ffill()
         df_norm['width'] = df_norm['width'].replace(r"^\s*$", np.nan, regex=True).ffill()
-        df_norm['original_size_text'] = df_norm['original_size_text'].fillna(method='ffill')
+        df_norm['original_size_text'] = df_norm['original_size_text'].ffill()
         df_norm['original_size_text'] = df_norm['original_size_text'].replace(r"^\s*$", np.nan, regex=True).ffill()
         st.write("Extracted information")
         st.dataframe(df_norm.head(200))
@@ -536,7 +551,7 @@ if submitted:
         # STEP 4: consolidate width sum to 60
         final_rows = []
     
-        for (item, vlt), group in df_norm.groupby(["item", "vlt"]):
+        for (item, vlt, length), group in df_norm.groupby(["item", "vlt", "length"]):
             out = consolidate_group(group)
             for r in out:
                 final_rows.append({
@@ -544,11 +559,12 @@ if submitted:
                     "vlt": vlt,
                     "composition": r["composition"],
                     "width": r["width_final"],
-                    "length": r["length"],
+                    "length": length,
                     "qty": r["qty"]
                 })
     
         df_final = pd.DataFrame(final_rows)
+        st.dataframe(df_final.head(2))
         # only process row with quantity > 0
         df_final = df_final[df_final['qty'] > 0]
         st.write('consolidated')
@@ -632,7 +648,7 @@ if submitted:
         # IIF generation (only if we have matched rows)
         if not df_join.empty:
         
-            from pages._utils import generate_purchase_order_iif, generate_sales_order_iif, load_qb_lists_from_iif, validate_items_against_qb
+            from pages._utils import *
         
             @st.cache_data
             def load_qb_items():
@@ -701,7 +717,7 @@ if submitted:
                     customer_name=vendor_name,
                     docnum="SO-1001"
                 )
-            if "so_csv" not in st.session_state:
+            if "po_csv" not in st.session_state:
                 st.session_state.po_csv = generate_purchase_order_csv(
                     rows=matched_rows,
                     qb_items=qb_items,
