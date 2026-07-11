@@ -512,7 +512,7 @@ if submitted:
             st.write("Post processing LLM output")
             json_text = out.text[out.text.find("["):out.text.rfind("]")+1]
             rows = json.loads(json_text)
-            st.write(rows)
+            # st.write(rows)
 
             # collect unique non-empty item values
             # unique_items = {r.get("item") for r in rows if r.get("item")}
