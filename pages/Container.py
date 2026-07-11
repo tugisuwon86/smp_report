@@ -471,7 +471,8 @@ if submitted:
         st.write("Reading the loaded files")
         for uploaded in uploaded_files:
             suffix = uploaded.name.lower()
-        
+
+            st.write(f"Reading {suffix} right now...")
             # STEP 1: extract data from the input file
             if suffix.endswith(("xlsx", "xls")):
                 df = pd.read_excel(uploaded)
