@@ -472,7 +472,7 @@ if submitted:
         for uploaded in uploaded_files:
             suffix = uploaded.name.lower()
 
-            st.write(f"Reading {suffix} right now...")
+            # st.write(f"Reading {suffix} right now...")
             # STEP 1: extract data from the input file
             if suffix.endswith(("xlsx", "xls")):
                 df = pd.read_excel(uploaded)
@@ -503,6 +503,7 @@ if submitted:
                     st.error("Unsupported file")
         
             # STEP 2: Normalize table using LLM
+            st.write("Calling LLM")
             prompt = LLM_PROMPT.format(data=raw_data)
             out = client.models.generate_content(
                 model="gemini-2.5-flash",
