@@ -503,7 +503,7 @@ if submitted:
                     st.error("Unsupported file")
         
             # STEP 2: Normalize table using LLM
-            st.write("Calling LLM")
+            # st.write("Calling LLM")
             prompt = LLM_PROMPT.format(data=raw_data)
             out = client.models.generate_content(
                 model="gemini-2.5-flash",
