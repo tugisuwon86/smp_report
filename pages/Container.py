@@ -434,7 +434,7 @@ models = client.models.list()
 # option = "Proforma"
 option_company = st.selectbox(
     "Company Name: ",
-    ("Geoshield", "Hitek", "SolarFX", "UVIRON", "SMP")
+    ("Geoshield", "Hitek", "SolarFX", "UVIRON", "SMP", "Filmstar")
 )
 # option = st.selectbox(
 #     "Proforma vs Purchase Order",
@@ -678,7 +678,8 @@ if submitted:
                 "Hitek": "Hitek",
                 "SolarFX": "SolarFX",
                 "UVIRON": "UVIRON",
-                "SMP": "SMP"
+                "SMP": "SMP",
+                "Filmstar": "Filmstar"
             }
         
             vendor_name = vendor_map.get(option_company, option_company)
