@@ -361,7 +361,11 @@ def best_meta_match(row, meta_df, option_company):
         factor = 5
 
     # 1️⃣ Filter by matching VLT
+    st.dataframe(meta_df)
     candidates = meta_df[meta_df["VLT"] == vlt]
+    if debugging:
+        st.write("vlt: ", vlt)
+        st.dataframe(candidates)
     if candidates.shape[0] == 0:
         candidates = meta_df.copy()
 
