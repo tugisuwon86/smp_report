@@ -331,7 +331,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    debugging = True
+    debugging = False
     if debugging:
         st.write("Here processing: ", row)
     item = str(row["item"])
@@ -469,7 +469,6 @@ if submitted:
     meta_df = load_meta(option_company)
     st.dataframe(meta_df)
     st.write("Loading metadata completed...")
-    st.write(a)
 
     all_rows = []
     if uploaded_files:
