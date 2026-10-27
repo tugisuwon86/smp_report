@@ -467,9 +467,10 @@ if submitted:
         return df_all.dropna(subset=['Description'])
 
     meta_df = load_meta(option_company)
-    # st.dataframe(meta_df.head(5))
+    st.dataframe(meta_df)
     st.write("Loading metadata completed...")
-    
+    st.write(a)
+
     all_rows = []
     if uploaded_files:
         st.write("Reading the loaded files")
