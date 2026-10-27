@@ -331,7 +331,7 @@ def extract_width_from_meta(desc):
 
 
 def best_meta_match(row, meta_df, option_company):
-    debugging = True
+    debugging = False
     if debugging:
         st.write("Here processing: ", row)
     item = str(row["item"])
@@ -361,7 +361,6 @@ def best_meta_match(row, meta_df, option_company):
         factor = 5
 
     # 1️⃣ Filter by matching VLT
-    st.dataframe(meta_df)
     candidates = meta_df[meta_df["VLT"] == vlt]
     if debugging:
         st.write("vlt: ", vlt)
